@@ -19,52 +19,35 @@
 ;; GNU General Public License for more details.
 
 ;;; Commentary:
-
-;; I wrote this since I saw one mode for yacc files out there roaming the world.
-;; I was daunted by the fact the it was written in 1990, and emacs has evolved
-;; so much since then (this I assume based on its evolution since i started
-;; using it). So I figured if i wanted one, I should make it myself. Please
-;; excuse idiosyncrasies, as this was my first major mode of this kind. The
-;; indentation code may be a bit weird, I am not sure, it was my first go at
-;; doing emacs indentation, so I look at how other modes did it, but then
-;; basically did what I thought was right
-
-;; I hope this is useful to other hackers, and happy Bison/Yacc hacking. If you
-;; have ideas/suggestions/problems with this code, I can be reached at
-;; beuscher@eecs.tulane.edu
-
-;; Eric --- Sat Mar  7 1:40:20 CDT 1998
+;;
+;; Provides a major-mode for bison (.y) files. It requires `flex-mode', which
+;; cannot be included because it is not GPL'd. It can be obtained here:
+;;
+;;   http://ftp.sunet.se/pub/gnu/emacs-lisp/incoming/flex-mode.el
 
 ;; Bison Sections:
 ;;
 ;; There are five sections to a bison file (if you include the area above the C
-;; declarations section. Most everything in this file either does actions based
-;; on which section you are deemed to be in, or based on an assumption that the
-;; function will only be called from certain sections. The function
-;; `bison--section-p' is the section parser.
+;; declarations section). Many commands in this file perform a different action
+;; depending on this context.
 
 ;; Indentation:
 ;;
-;; Indentations are done based on the section of code you are in. There is a
-;; procedure `bison--within-braced-c-expression-p' that checks for being in C
-;; code. If you are within c-code, indentations should occur based on how you
-;; have your C indentation set up. I am pretty sure this is the case. There are
-;; four variables, which control bison indentation within either the bison
-;; declarations section or the bison grammar section
-;; `bison-rule-separator-column' `bison-rule-separator-column'
-;; `bison-decl-type-column' `bison-decl-token-column'
-
-;; Flaw: indentation works on a per-line basis, unless within braced C sexp,
-;; I should fix this someday
-;; and to make matters worse, i never took out c-indent-region, so that is
-;; still the state of the `indent-region-function' variable
-
-;;  These are the lines i use to set up correct auto-ing
+;; Indentation is tries to be context-sensitive. There is a procedure,
+;; `bison--within-braced-c-expression-p', that checks for being in C code. If
+;; point is in C code, it should fall back to the user-defined indentation
+;; behaviour for C.
 ;;
-;;    (autoload 'bison-mode "bison-mode.el")
-;;    (add-to-set! auto-mode-alist '("\\.y$" . bison-mode))
-;;    (autoload 'flex-mode "flex-mode")
-;;    (add-to-set! auto-mode-alist '("\\.l$" . flex-mode))
+;; There are four variables which control bison indentation within either the
+;; declarations grammar sections:
+;;
+;; - `bison-rule-separator-column'
+;;
+;; - `bison-rule-separator-column'
+;;
+;; - `bison-decl-type-column'
+;;
+;; - `bison-decl-token-column'
 
 ;;; Code:
 
