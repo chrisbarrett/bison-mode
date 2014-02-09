@@ -5,6 +5,7 @@
 ;; Author:   Eric Beuscher <beuscher@eecs.tulane.edu>
 ;; Created:  2 Feb 1998
 ;; Version:  .1 (why not start somewhere besides 1.)
+;; Package-Requires: ((cl-lib "0.2"))
 ;; Keywords: bison-mode, yacc-mode
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -69,6 +70,7 @@
 
 ;(require 'flex-mode)			;; for flex-mode derivation
 (require 'make-regexp)			;; make-regexp
+(require 'cl-lib)
 
 ;; *************** internal vars ***************
 
@@ -147,11 +149,6 @@ key's electric variable")
   "Default expressions to highlight in Bison mode")
 
 ;; *************** utilities ***************
-
-(defun copy-list (ls)
-  "return a new list with the same elements as LS"
-  (cond ((null ls) '())
-	(t (cons (car ls) (copy-list (cdr ls))))))
 
 (defun same-line-p (pt1 pt2 &optional bol eol)
   (let ((bol (or bol (save-excursion (beginning-of-line) (point))))
@@ -482,7 +479,7 @@ save excursion is done higher up, so i dont concern myself here.
   (save-excursion
     (goto-char bol)
     (re-search-forward
-     (concat "^" (make-regexp (copy-list bison--declarers))) eol t)))
+     (concat "^" (make-regexp (cl-copy-list bison--declarers))) eol t)))
 
 (defun bison--production-opener-p (bol eol)
   "return t if the current line is a line that introduces a new production"
