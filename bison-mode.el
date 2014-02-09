@@ -725,22 +725,24 @@ If the pipe was used as a rule separator, align the pipe accordingly."
 (defun bison-electric-open-brace ()
   "Insert an opening curly brace and apply formatting."
   (interactive)
-  (if (not bison-disable-electric-keys?)
-      (let ((section (bison--section-start)))
-        (cond ((and (= section bison--grammar-rules-section)
-                    (not (bison--within-braced-c-expression-p section))
-                    (not (previous-non-ws-p)))
-               (if (not (= (current-column) bison-rule-enumeration-column))
-                   (progn
-                     (delete-horizontal-space)
-                     (indent-to-column bison-rule-enumeration-column))))
-              ((and (= section bison--bison-decls-section)
-                    (not (bison--within-braced-c-expression-p section))
-                    (not (previous-non-ws-p)))
-               (if (not (= (current-column) 0))
-                   (progn
-                     (delete-horizontal-space)
-                     (indent-to-column 0)))))))
+  (unless bison-disable-electric-keys?
+    (let ((section (bison--section-start)))
+      (cond
+       ((and (= section bison--grammar-rules-section)
+             (not (bison--within-braced-c-expression-p section))
+             (not (previous-non-ws-p)))
+        (unless (= (current-column) bison-rule-enumeration-column)
+          (delete-horizontal-space)
+          (indent-to-column bison-rule-enumeration-column)))
+
+       ((and (= section bison--bison-decls-section)
+             (not (bison--within-braced-c-expression-p section))
+             (not (previous-non-ws-p)))
+
+        (unless (zerop (current-column))
+          (delete-horizontal-space)
+          (indent-to-column 0))))))
+
   (insert "{"))
 
 (defun bison-electric-close-brace ()
