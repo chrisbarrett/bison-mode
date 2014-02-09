@@ -68,27 +68,34 @@ Used for %token, %type, etc."
 
 ;;;; Internal Variables
 
-(defvar bison--declarers '("%union" "%token" "%type"
-                           "%left" "%right" "%nonassoc")
+(defvar bison--declarers
+  '("%union" "%token" "%type" "%left" "%right" "%nonassoc")
   "List of commands which can declare a token or state type.")
 
 (defvar bison--word-constituent-re "\\(\\sw\\|_\\)")
+
 (defvar bison--production-re
   (concat "^" bison--word-constituent-re "+:"))
 
 (defvar bison--pre-c-decls-section 0
   "Section before c-declarations-section, if that section exists.")
+
 (defvar bison--c-decls-section 1
   "Section denoted by %{ and $} for c-declarations at the top of a bison file.")
+
 (defvar bison--bison-decls-section 2
   "Section before the rules section.")
+
 (defvar bison--grammar-rules-section 3
   "Section delimited by %%'s where productions and rules are enumerated.")
+
 (defvar bison--c-code-section 4
   "Section after the second %% where c-code can be placed.")
 
 (defvar bison--c-decls-section-opener "%{")
+
 (defvar bison--c-decls-section-closer "%}")
+
 (defvar bison--grammar-rules-section-delimeter "%%")
 
 (defvar bison-font-lock-keywords-1 c-font-lock-keywords
