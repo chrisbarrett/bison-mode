@@ -34,6 +34,55 @@
 (require 'cl-lib)
 (require 'cc-mode)
 
+(defgroup bison-mode nil
+  "Major mode for editing bison and yacc files"
+  :group 'languages
+  :prefix "bison-")
+
+(defcustom bison-rule-separator-column 8
+  "Column for rule and production separators \"|\" and \";\"."
+  :group 'bison-mode
+  :type 'integer)
+
+(defcustom bison-rule-enumeration-column 16
+  "Column for beginning enumeration of a production's rules."
+  :group 'bison-mode
+  :type 'integer)
+
+(defcustom bison-decl-type-column 8
+  "Column at which token and state types should be declared."
+  :group 'bison-mode
+  :type 'integer)
+
+(defcustom bison-decl-token-column 24
+  "Column at which tokens and states are listed when declared.
+
+Used for %token, %type, etc."
+  :group 'bison-mode
+  :type 'integer)
+
+(defcustom bison-disable-electric-keys? nil
+  "Non-nil means all electric keys will be disabled."
+  :group 'bison-mode
+  :type 'boolean)
+
+(defvar bison-electric-colon-v t
+  "non-nil means use an electric colon")
+(defvar bison-electric-pipe-v t
+  "non-nil means use an electric pipe")
+(defvar bison-electric-open-brace-v t
+  "non-nil means use an electric open-brace")
+(defvar bison-electric-close-brace-v t
+  "non-nil means use an electric close-brace")
+(defvar bison-electric-semicolon-v t
+  "non-nil means use an electric semicolon")
+(defvar bison-electric-percent-v t
+  "non-nil means use an electric percent")
+(defvar bison-electric-less-than-v t
+  "non-nil means use an electric less-than")
+(defvar bison-electric-greater-than-v t
+  "non-nil means use an electric greater-than")
+
 ;; *************** internal vars ***************
 
 (defvar bison--declarers '("%union" "%token" "%type"
@@ -58,40 +107,6 @@
 (defvar bison--c-decls-section-opener "%{")
 (defvar bison--c-decls-section-closer "%}")
 (defvar bison--grammar-rules-section-delimeter "%%")
-
-;; *************** user-definable vars ***************
-
-(defvar bison-rule-separator-column 8
-  "column for rule and production separators \"|\" and \";\"")
-(defvar bison-rule-enumeration-column 16
-  "column for beginning enumeration of a production's rules")
-(defvar bison-decl-type-column 8
-  "columnn in which tokens' and states' types should be when declared")
-(defvar bison-decl-token-column 24
-  "column in which tokens and states are listed when declared,
-as with %token, %type, ...")
-
-(defvar bison-all-electricity-off nil
-  "non-nil means all electric keys will be disabled,
-nil means that a bison-electric-* key will be on or off based on the individual
-key's electric variable")
-
-(defvar bison-electric-colon-v t
-  "non-nil means use an electric colon")
-(defvar bison-electric-pipe-v t
-  "non-nil means use an electric pipe")
-(defvar bison-electric-open-brace-v t
-  "non-nil means use an electric open-brace")
-(defvar bison-electric-close-brace-v t
-  "non-nil means use an electric close-brace")
-(defvar bison-electric-semicolon-v t
-  "non-nil means use an electric semicolon")
-(defvar bison-electric-percent-v t
-  "non-nil means use an electric percent")
-(defvar bison-electric-less-than-v t
-  "non-nil means use an electric less-than")
-(defvar bison-electric-greater-than-v t
-  "non-nil means use an electric greater-than")
 
 (defvar bison-font-lock-keywords-1 c-font-lock-keywords
   "Basic highlighting for Bison mode.")
@@ -355,7 +370,7 @@ found."
         (in-p nil))
     (save-excursion
       (goto-char (point-min))
-    (while (re-search-forward "[^\\]\"" point t)
+      (while (re-search-forward "[^\\]\"" point t)
         (setq in-p (not in-p)))
 
       in-p)))
@@ -724,7 +739,7 @@ a word(alphanumerics or '_''s), and there is no previous white space.
 
   (self-insert-command (prefix-numeric-value arg))
   (if (and bison-electric-colon-v
-           (not bison-all-electricity-off))
+           (not bison-disable-electric-keys?))
       (if (and (= bison--grammar-rules-section (bison--section-p))
                (bison--production-p)
                (not (bison--within-started-production-p)))
@@ -753,7 +768,7 @@ a word(alphanumerics or '_''s), and there is no previous white space.
   (interactive "P")
 
   (if (and bison-electric-pipe-v
-           (not bison-all-electricity-off)
+           (not bison-disable-electric-keys?)
            (= bison--grammar-rules-section (bison--section-p))
            (line-of-whitespace-p)
            )
@@ -773,7 +788,7 @@ bison-rule-enumeration-column"
   (interactive "P")
 
   (if (and bison-electric-open-brace-v
-           (not bison-all-electricity-off))
+           (not bison-disable-electric-keys?))
       (let ((section (bison--section-p)))
         (cond ((and (= section bison--grammar-rules-section)
                     (not (bison--within-braced-c-expression-p section))
@@ -800,7 +815,7 @@ in \"%}\", then make sure the \"%}\" indents to the beginning of the line"
   (self-insert-command (prefix-numeric-value arg))
 
   (if (and bison-electric-close-brace-v
-           (not bison-all-electricity-off))
+           (not bison-disable-electric-keys?))
       (cond ((search-backward "%}" (- (point) 2) t)
              (if (= (bison--section-p) bison--c-decls-section)
                  (progn
@@ -830,7 +845,7 @@ then put it in the 0 column
   (interactive "P")
 
   (if (and bison-electric-percent-v
-           (not bison-all-electricity-off))
+           (not bison-disable-electric-keys?))
       (let ((section (bison--section-p)))
         (if (and (= section bison--bison-decls-section)
                  (not (bison--within-braced-c-expression-p section))
@@ -847,7 +862,7 @@ declaration section, then put it in the bison-decl-type-column column
   (interactive "P")
 
   (if (and bison-electric-less-than-v
-           (not bison-all-electricity-off))
+           (not bison-disable-electric-keys?))
       (if (and (= (bison--section-p) bison--bison-decls-section)
                (bison--bison-decl-opener-p
                 (save-excursion (beginning-of-line) (point))
@@ -867,7 +882,7 @@ declaration section, then indent to bison-decl-token-column
   (self-insert-command (prefix-numeric-value arg))
 
   (if (and bison-electric-greater-than-v
-           (not bison-all-electricity-off))
+           (not bison-disable-electric-keys?))
       (let ((current-pt (point))
             (bol (save-excursion (beginning-of-line) (point))))
         (if (and (= (bison--section-p) bison--bison-decls-section)
