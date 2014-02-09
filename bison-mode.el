@@ -5,7 +5,7 @@
 ;; Author:   Eric Beuscher <beuscher@eecs.tulane.edu>
 ;; Created:  2 Feb 1998
 ;; Version:  0.2
-;; Package-Requires: ((cl-lib "0.2"))
+;; Package-Requires: ((cl-lib "0.2") (dash "2.5.0"))
 ;; Keywords: bison-mode, yacc-mode
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -30,8 +30,15 @@
 
 ;;; Code:
 
+(eval-and-compile
+  ;; Add cask packages to load path so flycheck checkers work.
+  (when (boundp 'flycheck-emacs-lisp-load-path)
+    (dolist (it (file-expand-wildcards "./.cask/*/elpa/*"))
+      (add-to-list 'flycheck-emacs-lisp-load-path it))))
+
 (require 'cl-lib)
 (require 'cc-mode)
+(require 'dash)
 
 (defgroup bison-mode nil
   "Major mode for editing bison and yacc files"
