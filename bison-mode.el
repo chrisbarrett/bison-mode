@@ -30,7 +30,6 @@
 
 ;;; Code:
 
-(require 'flex-mode nil t)
 (require 'cl-lib)
 (require 'cc-mode)
 
