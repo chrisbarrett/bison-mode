@@ -70,22 +70,22 @@ Used for %token, %type, etc."
 
 (defvar bison--declarers '("%union" "%token" "%type"
                            "%left" "%right" "%nonassoc")
-  "commands which can declare a token or state type")
+  "List of commands which can declare a token or state type.")
 
 (defvar bison--word-constituent-re "\\(\\sw\\|_\\)")
 (defvar bison--production-re
   (concat "^" bison--word-constituent-re "+:"))
 
 (defvar bison--pre-c-decls-section 0
-  "section before c-declarations-section, if that section exists")
+  "Section before c-declarations-section, if that section exists.")
 (defvar bison--c-decls-section 1
-  "section denoted by %{ and $} for c-declarations at the top of a bison file")
+  "Section denoted by %{ and $} for c-declarations at the top of a bison file.")
 (defvar bison--bison-decls-section 2
-  "section before the rules section")
+  "Section before the rules section.")
 (defvar bison--grammar-rules-section 3
-  "section delimited by %%'s where productions and rules are enumerated")
+  "Section delimited by %%'s where productions and rules are enumerated.")
 (defvar bison--c-code-section 4
-  "section after the second %% where c-code can be placed")
+  "Section after the second %% where c-code can be placed.")
 
 (defvar bison--c-decls-section-opener "%{")
 (defvar bison--c-decls-section-closer "%}")
@@ -103,11 +103,15 @@ Used for %token, %type, etc."
   "Gaudy highlighting for Bison mode.")
 
 (defvar bison-font-lock-keywords bison-font-lock-keywords-2
-  "Default expressions to highlight in Bison mode")
+  "Default expressions to highlight in Bison mode.")
 
 ;;;; Utility Functions
 
 (defun same-line-p (pt1 pt2 &optional bol eol)
+  "Non-nil if PT1 and PT2 are on the same line.
+
+Optional args BOL and EOL are buffer positions.  The function will
+return nil if either PT1 or PT2 are outside these bounds."
   (let ((bol (or bol (save-excursion (beginning-of-line) (point))))
         (eol (or eol (save-excursion (end-of-line) (point)))))
     (and (<= bol pt1) (<= bol pt2)
@@ -121,15 +125,13 @@ Used for %token, %type, etc."
   t)
 
 (defun white-space-separation (pt1 pt2)
-  "return t if there is nothing but whitespace between pt1 and pt2 not
-inclusive"
+  "Non-nil if there is nothing but whitespace between PT1 and PT2 (exclusive)."
   (save-excursion
     (goto-char (+ pt1 1))
     (not (re-search-forward "[^ \t\n]" pt2 t))))
 
 (defun previous-white-space-p ()
-  "return t if there is whitespace between the beginning of the line and the
-current (point)"
+  "Non-nil if there is whitespace between the beginning of the line and point."
   (save-excursion
     (let ((current-point (point)))
       (beginning-of-line)
@@ -138,8 +140,7 @@ current (point)"
         nil))))
 
 (defun previous-non-ws-p ()
-  "return t if there are non-whitespace characters between beginning of line
-and \(point\)"
+  "Non-nil if there are non-whitespace chars between bol and point."
   (save-excursion
     (let ((current-point (point)))
       (beginning-of-line)
@@ -147,7 +148,7 @@ and \(point\)"
       )))
 
 (defun following-non-ws-p ()
-  "return t if there are non-whitespace characters on the line"
+  "Non-nil if there are non-whitespace characters on this line."
   (save-excursion
     (let ((current-point (point)))
       (end-of-line)
@@ -155,14 +156,11 @@ and \(point\)"
       )))
 
 (defun line-of-whitespace-p ()
-  "return t if the line consists of nothiing but whitespace, nil otherwise"
+  "Non-nil if the current line is empty or entirely whitespace."
   (save-excursion
     (let ((eol (progn (end-of-line) (point))))
       (beginning-of-line)	;; should already be there anyway
       (not (re-search-forward "[^ \t\n]" eol t)))))
-
-(defun goto-next-non-ws ()
-  "goto and return pt of next non-whitespace character")
 
 ;;;; Mode Definition
 
@@ -176,7 +174,6 @@ and \(point\)"
     (define-key km (kbd "|") 'bison-electric-pipe)
     (define-key km (kbd "{") 'bison-electric-open-brace)
     (define-key km (kbd "}") 'bison-electric-close-brace)
-    (define-key km (kbd ";") 'bison-electric-semicolon)
     (define-key km (kbd "%") 'bison-electric-percent)
     (define-key km (kbd "<") 'bison-electric-less-than)
     (define-key km (kbd ">") 'bison-electric-greater-than)
@@ -215,51 +212,48 @@ and \(point\)"
 ;;;; Section Parsers
 
 (defun bison--section-p ()
-  "Return the section that user is currently in"
+  "Return the section at point as a string."
   (save-excursion
     (let ((bound (point)))
       (goto-char (point-min))
-      (bison--section-p-helper bound))))
-
-(defun bison--section-p-helper (bound)
-  (if (re-search-forward
-       (concat "^" bison--c-decls-section-opener)
-       bound t)
       (if (re-search-forward
-           (concat "^" bison--c-decls-section-closer)
+           (concat "^" bison--c-decls-section-opener)
            bound t)
           (if (re-search-forward
-               (concat "^" bison--grammar-rules-section-delimeter)
+               (concat "^" bison--c-decls-section-closer)
                bound t)
               (if (re-search-forward
                    (concat "^" bison--grammar-rules-section-delimeter)
                    bound t)
-                  bison--c-code-section
-                bison--grammar-rules-section)
-            bison--bison-decls-section)
-        bison--c-decls-section)
-    (if (re-search-forward
-         (concat "^" bison--grammar-rules-section-delimeter)
-         bound t)
+                  (if (re-search-forward
+                       (concat "^" bison--grammar-rules-section-delimeter)
+                       bound t)
+                      bison--c-code-section
+                    bison--grammar-rules-section)
+                bison--bison-decls-section)
+            bison--c-decls-section)
         (if (re-search-forward
              (concat "^" bison--grammar-rules-section-delimeter)
              bound t)
-            bison--c-code-section
-          bison--grammar-rules-section)
-      (if (re-search-forward
-           (concat "^" bison--c-decls-section-opener)
-           nil t)
-          bison--pre-c-decls-section
-        (if (re-search-forward
-             (concat "^" bison--grammar-rules-section-delimeter)
-             nil t)
-            bison--bison-decls-section
-          bison--pre-c-decls-section)))))
+            (if (re-search-forward
+                 (concat "^" bison--grammar-rules-section-delimeter)
+                 bound t)
+                bison--c-code-section
+              bison--grammar-rules-section)
+          (if (re-search-forward
+               (concat "^" bison--c-decls-section-opener)
+               nil t)
+              bison--pre-c-decls-section
+            (if (re-search-forward
+                 (concat "^" bison--grammar-rules-section-delimeter)
+                 nil t)
+                bison--bison-decls-section
+              bison--pre-c-decls-section)))))))
 
 ;;;; Syntax Parsers
 
 (defun bison--production-p ()
-  "return t if the \(point\) rests immediately after a production"
+  "Non-nil if point is immediately after a production."
   (save-excursion
     (let ((current-point (point)))
       (beginning-of-line)
@@ -270,12 +264,14 @@ and \(point\)"
              (= position current-point))))))
 
 (defun bison--find-production-opener ()
-  "return and goto the point of the nearest production opener above \(point\)"
+  "Try to move to the start of the production before point.
+Return the buffer position on success."
   (re-search-backward bison--production-re nil t))
 
 (defun bison--find-next-production ()
-  "return the position of the beginning of the next production,
-or nil if there isnt one"
+
+  "Try to move to the start of next production after point.
+Return the buffer position on success."
   (save-excursion
     (if (re-search-forward bison--production-re nil t)
         (progn
@@ -284,8 +280,8 @@ or nil if there isnt one"
       nil)))
 
 (defun bison--find-grammar-end ()
-  "return the position of the end of the grammar rules (assuming we are within
-the grammar rules section), or nil if there isnt one"
+  "Return the position of the end of the grammar rules.
+Return nil if the end cannot be found."
   (save-excursion
     (if (re-search-forward
          (concat "^" bison--grammar-rules-section-delimeter)
@@ -296,8 +292,8 @@ the grammar rules section), or nil if there isnt one"
       nil)))
 
 (defun bison--find-grammar-begin ()
-  "return the position of the beginning of the grammar rules (assuming we are
-within the grammar rules section), or nil if there isnt one"
+  "Return the position of the beginning of the grammar rules.
+Return nil if the start cannot be found."
   (save-excursion
     (if (re-search-backward
          (concat "^" bison--grammar-rules-section-delimeter)
@@ -306,11 +302,12 @@ within the grammar rules section), or nil if there isnt one"
       nil)))
 
 (defun bison--within-started-production-p ()
-  "is used by bison-electric-* functions to determine actions
-return t if within a production, nil if not
-
-a point is within a production if there is some non whitespace text before
-either the beginnings of another production or the end of the grammar rules"
+  "Non-nil if point is at a production."
+  ;; Point is within a production if there is some non-whitespace text before:
+  ;;
+  ;; - the beginnings of another production, or
+  ;;
+  ;; - the end of the grammar rules
   (save-excursion
     (let ((bound (cond ((bison--find-next-production))
                        ((bison--find-grammar-end))
@@ -329,26 +326,25 @@ either the beginnings of another production or the end of the grammar rules"
               nil))
         nil))))
 
-(defun bison--within-some-sexp-p (starter ender)
-  "return t if the \(point\) is within the sexp marked by the re's STARTER and
-ENDER"
+(defun bison--within-some-sexp-p (start-regexp end-regexp)
+  "Non-nil if point is within a sexp between START-REGEXP and END-REGEXP."
   (save-excursion
     (let ((current-point (point)))
-      (if (re-search-backward starter nil t) ;; find nearest starter
-          ;; look for ender, if found, then not within sexp
+      (if (re-search-backward start-regexp nil t) ;; find nearest start-regexp
+          ;; look for end-regexp, if found, then not within sexp
           (progn
             (goto-char (match-end 0))
-            (not (re-search-forward ender current-point t)))))))
+            (not (re-search-forward end-regexp current-point t)))))))
 
 (defun bison--within-c-comment-p ()
-  "return t if the point is within a c comment delimited by \"/*\" \"*/\""
+  "Non-nil if point is inside a C comment delimited by \"/*\" \"*/\"."
   (bison--within-some-sexp-p (regexp-quote comment-start)
                              (regexp-quote comment-end)))
 
 (defun bison--within-string-p (&optional point)
-  "
-start from the beginning of the buffer and toggle state as un-escaped \"'s are
-found."
+  "Non-nil if POINT is inside a string."
+  ;; Start from the beginning of the buffer and toggle state as un-escaped \"'s
+  ;; are found.
   (let ((point (or point (point)))
         (in-p nil))
     (save-excursion
@@ -359,45 +355,30 @@ found."
       in-p)))
 
 (defun bison--within-braced-c-expression-p (section)
-  "return t if the point is within an sexp delimited by braces \({,}\)
-"
-  ;;(debug)
+  "Non-nil if the point is within a sexp delimited by braces \({,}\)."
   (save-excursion
-    (bison--within-braced-c-expression-p-h section (point))))
+    (let ((low-pt (point)))
+      (cond ((= section bison--pre-c-decls-section) nil)
+            ((= section bison--c-decls-section)
+             (let ((opener (save-excursion (search-backward "%{"))))
+               (bison--inside-braces? opener low-pt)))
+            ((= section bison--bison-decls-section)
+             (let ((opener (save-excursion
+                             (or (search-backward "%}" nil t)
+                                 (point-min)))))
+               (bison--inside-braces? opener low-pt)))
+            ((= section bison--grammar-rules-section)
+             (let ((opener (save-excursion (bison--find-production-opener))))
+               (if opener
+                   (bison--inside-braces? opener low-pt)
+                 nil)))
+            ((= section bison--c-code-section)
+             t)))))
 
-(defun bison--within-braced-c-expression-p-h (section low-pt)
-  "
-Notes:
-save excursion is done higher up, so I don't concern myself here.
-"
-  (cond ((= section bison--pre-c-decls-section) nil)
-        ((= section bison--c-decls-section)
-         (let ((opener (save-excursion (search-backward "%{"))))
-           (bison--within-braced-c-expression-p-h-h opener low-pt)))
-        ((= section bison--bison-decls-section)
-         (let ((opener (save-excursion
-                         (or (search-backward "%}" nil t)
-                             (point-min)))))
-           (bison--within-braced-c-expression-p-h-h opener low-pt)))
-        ((= section bison--grammar-rules-section)
-         (let ((opener (save-excursion (bison--find-production-opener))))
-           (if opener
-               (bison--within-braced-c-expression-p-h-h opener low-pt)
-             nil)))
-        ((= section bison--c-code-section)
-         t)
-        ;;	 (let ((opener (save-excursion (bison--find-production-opener))))
-        ;;	   (if opener
-        ;;	       (bison--within-braced-c-expression-p-h-h
-        ;;		opener low-pt 1))))
-        ))
-
-(defun bison--within-braced-c-expression-p-h-h (high-pt low-pt)
-  "
-Notes:
-HIGH-PT goes toward (point-min), LOW-PT goes toward (point-max)
-save excursion is done higher up, so I don't concern myself here.
-"
+(defun bison--inside-braces? (high-pt low-pt)
+  "Non-nil if HIGH-PT and LOW-PT are inside a matched pair of braces."
+  ;; HIGH-PT goes toward point-min, LOW-PT goes toward point-max.
+  ;; save-excursion is done higher up, so I don't concern myself here.
   (let ((pt (point)))
     (let ((success nil) (count 1) (done nil))
       ;; loop until open brace found, that is not in comment or string literal
@@ -425,22 +406,26 @@ save excursion is done higher up, so I don't concern myself here.
               t))			; if no sexp close brace, then w/in
         nil))))
 
-(defun bison--bison-decl-opener-p (bol eol)
-  "return t if the current line is a bison declaration starter
-\(i.e. has a %type, %token, %right, ...\)"
+(defun bison--bison-decl-start-p (bol eol)
+  "Non-nil if the current line is the beginning of a bison declaration.
+Examples include %type, %token, %right.
+
+BOL and EOL constrain the search."
   (save-excursion
     (goto-char bol)
     (re-search-forward (eval `(rx bol (or ,@bison--declarers)))
                        eol t)))
 
 (defun bison--production-opener-p (bol eol)
-  "return t if the current line is a line that introduces a new production"
+  "Non-nil if the current line introduces a new production.
+BOL and EOL constrain the search."
   (save-excursion
     (goto-char bol)
     (re-search-forward bison--production-re eol t)))
 
 (defun bison--find-bison-semicolon ()
-  "return the position of next semicolon not within braces, nil otherwise"
+  "Return the position of next semicolon not within braces.
+Return nil of not found."
   (save-excursion
     (if (search-forward ";" nil t)
         (if (not (bison--within-braced-c-expression-p (bison--section-p)))
@@ -448,10 +433,9 @@ save excursion is done higher up, so I don't concern myself here.
           (bison--find-bison-semicolon))
       nil)))
 
-(defun bison--within-production-body-p (section)
-  "return t if the \(point\) is within the body of a production
-
-this procedure will fail if it is in a production header"
+(defun bison--inside-production-body-p (section)
+  "Non-nil if the point is inside the body of a production.
+Note that this procedure will fail if it is in a production header."
   (save-excursion
     (if (= section bison--grammar-rules-section)
         (let ((current-point (point)))
@@ -461,8 +445,8 @@ this procedure will fail if it is in a production header"
       nil)))
 
 (defun bison--production-alternative-p (bol eol section)
-  "return t if the current line contains a \"|\" used to designate a rule
-alternative"
+  "Non-nil if the current line contains a \"|\" designating a rule alternative.
+BOL and EOL constrain the search."
   (save-excursion
     (goto-char bol)
     (if (search-forward "|" eol t)
@@ -492,18 +476,13 @@ alternative"
       (c-indent-line))))
 
 (defun bison-indent-new-line (&optional c-sexp)
-  "Indent a fresh line of bison code
+  "Indent a fresh line of bison code.
 
-assumes indenting a new line, i.e. at column 0
-"
+Assumes that we are indenting a new line, i.e. at column 0."
   (interactive)
-
-  ;;(message "indent new line")
-  (let* ((section (bison--section-p))
-         (c-sexp (or c-sexp (bison--within-braced-c-expression-p section)))
-         )
+  (let ((section (bison--section-p)))
     (cond
-     (c-sexp
+     ((or c-sexp (bison--within-braced-c-expression-p section))
       (cond
        ((= section bison--grammar-rules-section)
         (c-indent-line
@@ -516,15 +495,12 @@ assumes indenting a new line, i.e. at column 0
                   (cons 'defun-block-intro
                         (progn
                           (re-search-forward bison--production-re) ; SIGERR
-                          (- (re-search-forward "[^ \t]") ; SIGERR
+                          (- (re-search-forward "[^ \t]")          ; SIGERR
                              1))))
                nil)))))
        (t (c-indent-line))))
      ((= section bison--pre-c-decls-section)
       (c-indent-line))
-;;;     ((= section bison--c-decls-section) ; is on column 0 anyway
-;;;      (indent-to-column 0)
-;;;      )
      ((= section bison--bison-decls-section)
       (indent-to-column bison-decl-token-column))
      ((= section bison--grammar-rules-section)
@@ -540,16 +516,11 @@ assumes indenting a new line, i.e. at column 0
                  0)
              (if (save-excursion (bison--find-production-opener))
                  bison-rule-enumeration-column
-               0))))))
-     ((= section bison--c-code-section)) ;;leave-alone
-     )))
+               0)))))))))
 
 (defun bison-indent-line ()
-  "Indent a line of bison code
-"
+  "Indent a line of bison code."
   (interactive)
-
-  ;;(message "indent-line")
   (let* ((pos (- (point-max) (point)))
          (reset-pt (lambda ()
                      (if (> (- (point-max) pos) (point))
@@ -579,7 +550,7 @@ assumes indenting a new line, i.e. at column 0
             (funcall reset-pt))))
 
        ((= section bison--bison-decls-section)
-        (let ((opener (bison--bison-decl-opener-p bol eol)))
+        (let ((opener (bison--bison-decl-start-p bol eol)))
           (cond
            (opener
             (goto-char opener)
@@ -680,7 +651,7 @@ assumes indenting a new line, i.e. at column 0
           (bison--handle-indent-c-sexp
            section bison-rule-enumeration-column bol)
           (funcall reset-pt))
-         ((bison--within-production-body-p section)
+         ((bison--inside-production-body-p section)
           (back-to-indentation)
           (if (not (= (current-column) bison-rule-enumeration-column))
               (progn
@@ -706,18 +677,16 @@ assumes indenting a new line, i.e. at column 0
 
 ;;;; Electric Commands
 
-(defun bison-electric-colon (arg)
-  "If the colon <:> delineates a production,
-   then insert a semicolon on the next line in the BISON-RULE-SEPARATOR-COLUMN,
-	put the cursor in the BISON-RULE-ENUMERATION-COLUMN for the beginning
-	of the rule
-   else just run self-insert-command
-A colon delineates a production by the fact that it is immediately preceded by
-a word(alphanumerics or '_''s), and there is no previous white space.
-"
-  (interactive "P")
+(defun bison-electric-colon ()
+  "Insert a context-sensitive colon character.
 
-  (self-insert-command (prefix-numeric-value arg))
+If at a production, insert a semicolon on the next line at
+`bison-rule-seperator-column', then move to
+`bison-rule-enumerator-column'.
+
+Otherwise insert a single colon."
+  (interactive)
+  (insert ":")
   (if (not bison-disable-electric-keys?)
       (if (and (= bison--grammar-rules-section (bison--section-p))
                (bison--production-p)
@@ -738,14 +707,10 @@ a word(alphanumerics or '_''s), and there is no previous white space.
             (indent-to-column bison-rule-enumeration-column)))
     ))
 
-(defun bison-electric-pipe (arg)
-  "If the pipe <|> is used as a rule separator within a production,
-   then move it into BISON-RULE-SEPARATOR-COLUMN
-	indent to BISON-RULE-ENUMERATION-COLUMN on the same line
-   else just run self-insert-command
-"
-  (interactive "P")
-
+(defun bison-electric-pipe ()
+  "Insert a pipe character.
+If the pipe was used as a rule separator, align the pipe accordingly."
+  (interactive)
   (if (and (not bison-disable-electric-keys?)
            (= bison--grammar-rules-section (bison--section-p))
            (line-of-whitespace-p)
@@ -754,17 +719,13 @@ a word(alphanumerics or '_''s), and there is no previous white space.
         (beginning-of-line)
         (just-no-space)
         (indent-to-column bison-rule-separator-column)
-        (self-insert-command (prefix-numeric-value arg))
-        (indent-to-column bison-rule-enumeration-column)
-        )
-    (self-insert-command (prefix-numeric-value arg))))
+        (insert "|")
+        (indent-to-column bison-rule-enumeration-column))
+    (insert "|")))
 
-(defun bison-electric-open-brace (arg)
-  "used for the opening brace of a C action definition for production rules,
-if there is only whitespace before \(point\), then put open-brace in
-bison-rule-enumeration-column"
-  (interactive "P")
-
+(defun bison-electric-open-brace ()
+  "Insert an opening curly brace and apply formatting."
+  (interactive)
   (if (not bison-disable-electric-keys?)
       (let ((section (bison--section-p)))
         (cond ((and (= section bison--grammar-rules-section)
@@ -781,45 +742,24 @@ bison-rule-enumeration-column"
                    (progn
                      (just-no-space)
                      (indent-to-column 0)))))))
+  (insert "{"))
 
-  (self-insert-command (prefix-numeric-value arg)))
-
-(defun bison-electric-close-brace (arg)
-  "If the close-brace \"}\" is used as the c-declarations section closer
-in \"%}\", then make sure the \"%}\" indents to the beginning of the line"
-  (interactive "P")
-
-  (self-insert-command (prefix-numeric-value arg))
-
+(defun bison-electric-close-brace ()
+  "Insert an closing curly brace and apply formatting."
+  (interactive)
+  (insert "}")
   (if (not bison-disable-electric-keys?)
       (cond ((search-backward "%}" (- (point) 2) t)
              (if (= (bison--section-p) bison--c-decls-section)
                  (progn
                    (just-no-space)
                    (forward-char 2))	; for "%}"
-               (forward-char 1)))
-            )))
+               (forward-char 1))))))
 
-(defun bison-electric-semicolon (arg)
-  "if the semicolon is used to end a production, then place it in
-bison-rule-separator-column
-
-a semicolon is deemed to be used for ending a production if it is not found
-within braces
-
-this is just self-insert-command as I have yet to write the actual
-bison-electric-semicolon function yet
-"
-  (interactive "P")
-
-  (self-insert-command (prefix-numeric-value arg)))
-
-(defun bison-electric-percent (arg)
-  "if the percent is a declarer in the bison declaration's section,
-then put it in the 0 column
-"
-  (interactive "P")
-
+(defun bison-electric-percent ()
+  "Insert a % character.
+If this begins a declaration, move it to the start column."
+  (interactive)
   (if (not bison-disable-electric-keys?)
       (let ((section (bison--section-p)))
         (if (and (= section bison--bison-decls-section)
@@ -827,39 +767,32 @@ then put it in the 0 column
                  (not (previous-non-ws-p))
                  (not (= (current-column) 0)))
             (just-no-space))))
+  (insert "%"))
 
-  (self-insert-command (prefix-numeric-value arg)))
-
-(defun bison-electric-less-than (arg)
-  "if the less-than is a type declarer opener for tokens in the bison
-declaration section, then put it in the bison-decl-type-column column
-"
-  (interactive "P")
-
+(defun bison-electric-less-than ()
+  "Insert a < character.
+If it begins a type declaration, indent to `bison-decl-type-column'."
+  (interactive)
   (if (not bison-disable-electric-keys?)
       (if (and (= (bison--section-p) bison--bison-decls-section)
-               (bison--bison-decl-opener-p
+               (bison--bison-decl-start-p
                 (save-excursion (beginning-of-line) (point))
                 (point)))
           (progn
             (just-no-space)
             (indent-to-column bison-decl-type-column))))
+  (insert "<"))
 
-  (self-insert-command (prefix-numeric-value arg)))
-
-(defun bison-electric-greater-than (arg)
-  "if the greater-than is a type declarer closer for tokens in the bison
-declaration section, then indent to bison-decl-token-column
-"
-  (interactive "P")
-
-  (self-insert-command (prefix-numeric-value arg))
-
+(defun bison-electric-greater-than ()
+  "Insert a > character.
+If it ends a type declaration, indent to `bison-decl-token-column'."
+  (interactive)
+  (insert ">")
   (if (not bison-disable-electric-keys?)
       (let ((current-pt (point))
             (bol (save-excursion (beginning-of-line) (point))))
         (if (and (= (bison--section-p) bison--bison-decls-section)
-                 (bison--bison-decl-opener-p bol (point)))
+                 (bison--bison-decl-start-p bol (point)))
             (if (search-backward "<" bol t)
                 (if (re-search-forward
                      (concat "<" bison--word-constituent-re "+>")
