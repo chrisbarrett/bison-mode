@@ -275,62 +275,49 @@ Return the buffer position on success."
   (re-search-backward bison--production-re nil t))
 
 (defun bison--find-next-production ()
-
   "Try to move to the start of next production after point.
 Return the buffer position on success."
   (save-excursion
-    (if (re-search-forward bison--production-re nil t)
-        (progn
-          (beginning-of-line)
-          (point))
-      nil)))
+    (when (re-search-forward bison--production-re nil t)
+      (line-beginning-position))))
 
 (defun bison--find-grammar-end ()
   "Return the position of the end of the grammar rules.
 Return nil if the end cannot be found."
   (save-excursion
-    (if (re-search-forward
-         (concat "^" bison--grammar-rules-section-delimeter)
-         nil t)
-        (progn
-          (beginning-of-line)
-          (point))
-      nil)))
+    (when (re-search-forward
+           (concat "^" bison--grammar-rules-section-delimeter)
+           nil t)
+      (line-beginning-position))))
 
 (defun bison--find-grammar-begin ()
   "Return the position of the beginning of the grammar rules.
 Return nil if the start cannot be found."
   (save-excursion
-    (if (re-search-backward
-         (concat "^" bison--grammar-rules-section-delimeter)
-         nil t)
-        (point)
-      nil)))
+    (when (re-search-backward
+           (concat "^" bison--grammar-rules-section-delimeter)
+           nil t)
+      (point))))
 
 (defun bison--within-started-production-p ()
-  "Non-nil if point is at a production."
+  "Non-nil if point is at an unfinished production."
   ;; Point is within a production if there is some non-whitespace text before:
   ;;
   ;; - the beginnings of another production, or
   ;;
   ;; - the end of the grammar rules
   (save-excursion
-    (let ((bound (cond ((bison--find-next-production))
-                       ((bison--find-grammar-end))
-                       (t nil))))
-      (if bound
-          (let ((sval (re-search-forward
-                       (concat "\\(\\s \\|" ;; whitespace or
-                               ;; comments
-                               (regexp-quote comment-start)
-                               "\\(.\\|\n\\)*" ;; comment body
-                               (regexp-quote comment-end)
-                               "\\)+")	;; end or
-                       bound t)))
-            (if sval
-                (not (= sval bound))
-              nil))
-        nil))))
+    (-when-let* ((limit (or (bison--find-next-production)
+                            (bison--find-grammar-end)))
+                 (sval (re-search-forward
+                        (concat "\\(\\s \\|" ;; whitespace or
+                                ;; comments
+                                (regexp-quote comment-start)
+                                "\\(.\\|\n\\)*" ;; comment body
+                                (regexp-quote comment-end)
+                                "\\)+")	;; end or
+                        limit t)))
+      (not (= sval limit)))))
 
 (defun bison--within-some-sexp-p (start-regexp end-regexp)
   "Non-nil if point is within a sexp between START-REGEXP and END-REGEXP."
@@ -535,6 +522,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
      ((= sec bison--grammar-rules-section)
       (indent-to-column (bison--grammar-rule-start-col sec))))))
 
+;; FIXME: Refactor this terrifying monolith.
 (defun bison-indent-line ()
   "Indent a line of bison code."
   (interactive)
