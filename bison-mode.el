@@ -53,6 +53,7 @@
 
 (require 'flex-mode nil t)
 (require 'cl-lib)
+(require 'cc-vars)
 
 ;; *************** internal vars ***************
 
@@ -188,16 +189,14 @@ and \(point\)"
 
 ;; *************** bison-mode ***************
 
+(make-variable-buffer-local 'c-offsets-alist)
+
 (define-derived-mode bison-mode flex-mode "Bison"
   "Major mode for editing bison/yacc files
 
 "
-  ;; try to set the indentation correctly
-  (setq-default c-basic-offset 4)
-  (make-variable-buffer-local 'c-basic-offset)
-
+  (setq-local c-basic-offset 4)
   (c-set-offset 'knr-argdecl-intro 0)
-  (make-variable-buffer-local 'c-offsets-alist)
 
   ;; remove auto and hungry anything
   (c-toggle-auto-hungry-state -1)
