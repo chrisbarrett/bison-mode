@@ -66,7 +66,7 @@ Used for %token, %type, etc."
   :group 'bison-mode
   :type 'boolean)
 
-;; *************** internal vars ***************
+;;;; Internal Variables
 
 (defvar bison--declarers '("%union" "%token" "%type"
                            "%left" "%right" "%nonassoc")
@@ -105,7 +105,7 @@ Used for %token, %type, etc."
 (defvar bison-font-lock-keywords bison-font-lock-keywords-2
   "Default expressions to highlight in Bison mode")
 
-;; *************** utilities ***************
+;;;; Utility Functions
 
 (defun same-line-p (pt1 pt2 &optional bol eol)
   (let ((bol (or bol (save-excursion (beginning-of-line) (point))))
@@ -164,7 +164,7 @@ and \(point\)"
 (defun goto-next-non-ws ()
   "goto and return pt of next non-whitespace character")
 
-;; *************** bison-mode ***************
+;;;; Mode Definition
 
 (make-variable-buffer-local 'c-offsets-alist)
 
@@ -212,7 +212,7 @@ and \(point\)"
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.y$" . bison-mode))
 
-;; *************** section parsers ***************
+;;;; Section Parsers
 
 (defun bison--section-p ()
   "Return the section that user is currently in"
@@ -256,7 +256,7 @@ and \(point\)"
             bison--bison-decls-section
           bison--pre-c-decls-section)))))
 
-;; *************** syntax parsers ***************
+;;;; Syntax Parsers
 
 (defun bison--production-p ()
   "return t if the \(point\) rests immediately after a production"
@@ -358,9 +358,6 @@ found."
 
       in-p)))
 
-;;; bison--within-braced-c-expression-p
-;;; new and improved, no more recursion, does not break when literal strings
-;;; contain un-matched braces
 (defun bison--within-braced-c-expression-p (section)
   "return t if the point is within an sexp delimited by braces \({,}\)
 "
@@ -472,7 +469,7 @@ alternative"
         (not (bison--within-braced-c-expression-p section))
       nil)))
 
-;; *************** indent functions ***************
+;;;; Indentation
 
 (defun bison--handle-indent-c-sexp (section indent-column bol)
   (let* ((o-brace (re-search-backward "[^%]{" bol t))
@@ -707,7 +704,7 @@ assumes indenting a new line, i.e. at column 0
         (c-indent-line))
        ))))
 
-;; *************** electric-functions ***************
+;;;; Electric Commands
 
 (defun bison-electric-colon (arg)
   "If the colon <:> delineates a production,
