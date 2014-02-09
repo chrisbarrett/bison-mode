@@ -772,14 +772,14 @@ If this begins a declaration, move it to the start column."
   "Insert a < character.
 If it begins a type declaration, indent to `bison-decl-type-column'."
   (interactive)
-  (if (not bison-disable-electric-keys?)
-      (if (and (= (bison--section-start) bison--bison-decls-section)
+  (unless bison-disable-electric-keys?
+    (when (and (= (bison--section-start) bison--bison-decls-section)
                (bison--bison-decl-start-p
                 (save-excursion (beginning-of-line) (point))
                 (point)))
-          (progn
-            (delete-horizontal-space)
-            (indent-to-column bison-decl-type-column))))
+      (delete-horizontal-space)
+      (indent-to-column bison-decl-type-column)))
+
   (insert "<"))
 
 (defun bison-electric-greater-than ()
