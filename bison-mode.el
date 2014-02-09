@@ -744,16 +744,16 @@ If the pipe was used as a rule separator, align the pipe accordingly."
   (insert "{"))
 
 (defun bison-electric-close-brace ()
-  "Insert an closing curly brace and apply formatting."
+  "Insert a closing curly brace and apply formatting."
   (interactive)
   (insert "}")
-  (if (not bison-disable-electric-keys?)
-      (cond ((search-backward "%}" (- (point) 2) t)
-             (if (= (bison--section-start) bison--c-decls-section)
-                 (progn
-                   (delete-horizontal-space)
-                   (forward-char 2))	; for "%}"
-               (forward-char 1))))))
+  (unless bison-disable-electric-keys?
+    (when (search-backward "%}" (- (point) 2) t)
+      (if (/= (bison--section-start) bison--c-decls-section)
+          (forward-char 1)
+        ;; Format "%}"
+        (delete-horizontal-space)
+        (forward-char 2)))))
 
 (defun bison-electric-percent ()
   "Insert a % character.
