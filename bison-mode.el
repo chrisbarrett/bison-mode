@@ -238,7 +238,7 @@ and \(point\)"
   "Return the section that user is currently in"
   (save-excursion
     (let ((bound (point)))
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (bison--section-p-helper bound))))
 
 (defun bison--section-p-helper (bound)
@@ -372,9 +372,8 @@ found."
   (let ((point (or point (point)))
         (in-p nil))
     (save-excursion
-      (beginning-of-buffer)
-
-      (while (re-search-forward "[^\\]\"" point t)
+      (goto-char (point-min))
+    (while (re-search-forward "[^\\]\"" point t)
         (setq in-p (not in-p)))
 
       in-p)))
@@ -575,9 +574,9 @@ assumes indenting a new line, i.e. at column 0
 
   ;;(message "indent-line")
   (let* ((pos (- (point-max) (point)))
-         (reset-pt (function (lambda ()
-                               (if (> (- (point-max) pos) (point))
-                                   (goto-char (- (point-max) pos))))))
+         (reset-pt (lambda ()
+                     (if (> (- (point-max) pos) (point))
+                         (goto-char (- (point-max) pos)))))
          (bol (save-excursion (beginning-of-line) (point)))
          (eol (save-excursion (end-of-line) (point)))
          )
@@ -597,11 +596,10 @@ assumes indenting a new line, i.e. at column 0
        ((= section bison--c-decls-section)
         (if c-sexp
             (bison--handle-indent-c-sexp section 0 bol)
-          (if (not (= (current-indentation) 0))
-              (progn
-                (back-to-indentation)
-                (just-no-space)
-                (function reset-pt)))))
+          (unless (= (current-indentation) 0)
+            (back-to-indentation)
+            (just-no-space)
+            (funcall reset-pt))))
 
        ((= section bison--bison-decls-section)
         (let ((opener (bison--bison-decl-opener-p bol eol)))
