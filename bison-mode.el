@@ -117,13 +117,6 @@ return nil if either PT1 or PT2 are outside these bounds."
     (and (<= bol pt1) (<= bol pt2)
          (>= eol pt1) (>= eol pt2))))
 
-(defun just-no-space ()
-  "Delete all spaces and tabs around point, leaving no spaces."
-  (interactive "*")
-  (skip-chars-backward " \t")
-  (delete-region (point) (progn (skip-chars-forward " \t") (point)))
-  t)
-
 (defun white-space-separation (pt1 pt2)
   "Non-nil if there is nothing but whitespace between PT1 and PT2 (exclusive)."
   (save-excursion
@@ -467,7 +460,7 @@ BOL and EOL constrain the search."
               (if (not (= o-brace indent-column)) ;; but not in right spot
                   (progn
                     (back-to-indentation)
-                    (just-no-space)
+                    (delete-horizontal-space)
                     (indent-to-column indent-column))
                 ;; else all is good
                 )
@@ -546,7 +539,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
             (bison--handle-indent-c-sexp section 0 bol)
           (unless (= (current-indentation) 0)
             (back-to-indentation)
-            (just-no-space)
+            (delete-horizontal-space)
             (funcall reset-pt))))
 
        ((= section bison--bison-decls-section)
@@ -560,7 +553,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
                   (if (following-non-ws-p)
                       (progn
                         (forward-char 1)
-                        (just-no-space)
+                        (delete-horizontal-space)
                         (newline)
                         (bison-indent-new-line t))))
               (let ((complete-type t))
@@ -569,7 +562,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
                       (setq complete-type nil)
                       (if (not (= (current-column) bison-decl-type-column))
                           (progn
-                            (just-no-space)
+                            (delete-horizontal-space)
                             (indent-to-column bison-decl-type-column))
                         (and (re-search-forward
                               (concat "<" bison--word-constituent-re "+>")
@@ -581,7 +574,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
                       (concat "\\(" bison--word-constituent-re "\\|'\\)"))
                      (if (not (= (current-column) bison-decl-token-column))
                          (progn
-                           (just-no-space)
+                           (delete-horizontal-space)
                            (indent-to-column bison-decl-token-column))))))
             (funcall reset-pt))
            (c-sexp
@@ -593,12 +586,12 @@ Assumes that we are indenting a new line, i.e. at column 0."
                    (looking-at bison--word-constituent-re)
                    (if (not (= (current-column) bison-decl-token-column))
                        (progn
-                         (just-no-space)
+                         (delete-horizontal-space)
                          (indent-to-column bison-decl-token-column))))
                   ;; put/keep close-brace in the 0 column
                   ((looking-at "}")
                    (if (not (= (current-column) 0))
-                       (just-no-space)))
+                       (delete-horizontal-space)))
                   ;; leave comments alone
                   ((looking-at (regexp-quote comment-start)) nil)
                   ;; else do nothing
@@ -612,7 +605,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
           (if (following-non-ws-p)
               (if (> (current-column) bison-rule-enumeration-column)
                   (progn
-                    (just-no-space)
+                    (delete-horizontal-space)
                     (newline)
                     (indent-to-column bison-rule-enumeration-column))
                 (save-excursion
@@ -620,7 +613,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
                   (let ((col (current-column)))
                     (cond ((> col (+ 1 bison-rule-enumeration-column))
                            (forward-char -1)
-                           (just-no-space)
+                           (delete-horizontal-space)
                            (indent-to-column bison-rule-enumeration-column))
                           ((< col (+ 1 bison-rule-enumeration-column))
                            (forward-char -1)
@@ -631,7 +624,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
           (back-to-indentation);; should put point on "|"
           (if (not (= (current-column) bison-rule-separator-column))
               (progn
-                (just-no-space)
+                (delete-horizontal-space)
                 (indent-to-column bison-rule-separator-column)))
           (forward-char 1)
           (if (following-non-ws-p)
@@ -640,7 +633,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
                 (let ((col (current-column)))
                   (cond ((> col (+ 1 bison-rule-enumeration-column))
                          (forward-char -1)
-                         (just-no-space)
+                         (delete-horizontal-space)
                          (indent-to-column bison-rule-enumeration-column))
                         ((< col (+ 1 bison-rule-enumeration-column))
                          (forward-char -1)
@@ -655,7 +648,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
           (back-to-indentation)
           (if (not (= (current-column) bison-rule-enumeration-column))
               (progn
-                (just-no-space)
+                (delete-horizontal-space)
                 (indent-to-column
                  bison-rule-enumeration-column)))
           (funcall reset-pt))
@@ -666,7 +659,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
                 (if (not (= cur-ind bison-rule-enumeration-column))
                     (progn
                       (back-to-indentation)
-                      (just-no-space)
+                      (delete-horizontal-space)
                       (indent-to-column bison-rule-enumeration-column)
                       (funcall reset-pt)))
               ;; else leave alone
@@ -701,7 +694,7 @@ Otherwise insert a single colon."
                    "\\s "
                    (save-excursion (beginning-of-line) (point))
                    t)
-                  (just-no-space)))
+                  (delete-horizontal-space)))
             (if (not (< (current-column) bison-rule-enumeration-column))
                 (newline))
             (indent-to-column bison-rule-enumeration-column)))
@@ -717,7 +710,7 @@ If the pipe was used as a rule separator, align the pipe accordingly."
            )
       (progn
         (beginning-of-line)
-        (just-no-space)
+        (delete-horizontal-space)
         (indent-to-column bison-rule-separator-column)
         (insert "|")
         (indent-to-column bison-rule-enumeration-column))
@@ -733,14 +726,14 @@ If the pipe was used as a rule separator, align the pipe accordingly."
                     (not (previous-non-ws-p)))
                (if (not (= (current-column) bison-rule-enumeration-column))
                    (progn
-                     (just-no-space)
+                     (delete-horizontal-space)
                      (indent-to-column bison-rule-enumeration-column))))
               ((and (= section bison--bison-decls-section)
                     (not (bison--within-braced-c-expression-p section))
                     (not (previous-non-ws-p)))
                (if (not (= (current-column) 0))
                    (progn
-                     (just-no-space)
+                     (delete-horizontal-space)
                      (indent-to-column 0)))))))
   (insert "{"))
 
@@ -752,7 +745,7 @@ If the pipe was used as a rule separator, align the pipe accordingly."
       (cond ((search-backward "%}" (- (point) 2) t)
              (if (= (bison--section-p) bison--c-decls-section)
                  (progn
-                   (just-no-space)
+                   (delete-horizontal-space)
                    (forward-char 2))	; for "%}"
                (forward-char 1))))))
 
@@ -766,7 +759,7 @@ If this begins a declaration, move it to the start column."
                  (not (bison--within-braced-c-expression-p section))
                  (not (previous-non-ws-p))
                  (not (= (current-column) 0)))
-            (just-no-space))))
+            (delete-horizontal-space))))
   (insert "%"))
 
 (defun bison-electric-less-than ()
@@ -779,7 +772,7 @@ If it begins a type declaration, indent to `bison-decl-type-column'."
                 (save-excursion (beginning-of-line) (point))
                 (point)))
           (progn
-            (just-no-space)
+            (delete-horizontal-space)
             (indent-to-column bison-decl-type-column))))
   (insert "<"))
 
@@ -799,7 +792,7 @@ If it ends a type declaration, indent to `bison-decl-token-column'."
                      current-pt t)
                     (if (not (following-non-ws-p))
                         (progn
-                          (just-no-space)
+                          (delete-horizontal-space)
                           (indent-to-column bison-decl-token-column)))))))))
 
 (provide 'bison-mode)
