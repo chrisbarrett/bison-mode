@@ -65,7 +65,7 @@ clean-all : clean clean-pkgdir
 .PHONY: clean
 clean :
 	rm -f $(OBJECTS)
-	rm flycheck_bison*
+	rm -f flycheck_bison*
 	rm -rf bison-mode-*.tar bison-mode-pkg.el
 
 # Remove packages installed by Cask.
