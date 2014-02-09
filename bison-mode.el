@@ -232,6 +232,9 @@ and \(point\)"
                                     bison-font-lock-keywords-2)
                                    nil nil nil)))
 
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.y$" . bison-mode))
+
 ;; *************** section parsers ***************
 
 (defun bison--section-p ()
