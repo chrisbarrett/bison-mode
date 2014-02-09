@@ -928,30 +928,6 @@ declaration section, then indent to bison-decl-token-column
 			  (just-no-space)
 			  (indent-to-column bison-decl-token-column)))))))))
 
-;(defun bison-electric-semicolon (arg)
-;  "if the semicolon is used to end a production, then place it in
-;bison-rule-separator-column
-
-;a semicolon is deemed to be used for ending a production if it is not found
-;within braces
-;"
-;  (interactive "P")
-;  (if (and (not (bison--within-braced-c-expression-p))
-;	   (line-of-whitespace-p)
-;	   (
-;      (progn
-;	(just-no-space)			;; remove extraneous whitespace
-;	(indent-to-column bison-rule-separator-column)))
-
-;  (self-insert-command (prefix-numeric-value arg)))
-
-;; *************** other ***************
-
-;(defun bison--confirm-productions-closed ()
-;  (save-excursion
-;    (goto-char (point-max))
-;    (if (re-search-forward "^%%" nil t)
-
 (provide 'bison-mode)
 
 ;;; bison-mode.el ends here
