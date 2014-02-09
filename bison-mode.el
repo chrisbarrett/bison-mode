@@ -4,7 +4,7 @@
 
 ;; Author:   Eric Beuscher <beuscher@eecs.tulane.edu>
 ;; Created:  2 Feb 1998
-;; Version:  .1 (why not start somewhere besides 1.)
+;; Version:  0.2
 ;; Package-Requires: ((cl-lib "0.2"))
 ;; Keywords: bison-mode, yacc-mode
 
