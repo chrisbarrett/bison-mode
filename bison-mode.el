@@ -191,10 +191,27 @@ and \(point\)"
 
 (make-variable-buffer-local 'c-offsets-alist)
 
+;;;###autoload
+(defvar bison-mode-map
+  (let ((km (make-sparse-keymap)))
+    (set-keymap-parent km flex-mode-map)
+    (define-key km (kbd ":") 'bison-electric-colon)
+    (define-key km (kbd "|") 'bison-electric-pipe)
+    (define-key km (kbd "{") 'bison-electric-open-brace)
+    (define-key km (kbd "}") 'bison-electric-close-brace)
+    (define-key km (kbd ";") 'bison-electric-semicolon)
+    (define-key km (kbd "%") 'bison-electric-percent)
+    (define-key km (kbd "<") 'bison-electric-less-than)
+    (define-key km (kbd ">") 'bison-electric-greater-than)
+    (define-key km (kbd "TAB") 'bison-indent-line)
+    km)
+  "Keymap for `bison-mode'.  Inherits from `flex-mode-map'.")
+
+;;;###autoload
 (define-derived-mode bison-mode flex-mode "Bison"
   "Major mode for editing bison/yacc files
 
-"
+\\{bison-mode-map}"
   (setq-local c-basic-offset 4)
   (c-set-offset 'knr-argdecl-intro 0)
 
@@ -202,21 +219,6 @@ and \(point\)"
   (c-toggle-auto-hungry-state -1)
   (c-toggle-auto-state -1)
   (c-toggle-hungry-state -1)
-
-  (use-local-map bison-mode-map)
-
-  (define-key bison-mode-map ":" 'bison-electric-colon)
-  (define-key bison-mode-map "|" 'bison-electric-pipe)
-  (define-key bison-mode-map "{" 'bison-electric-open-brace)
-  (define-key bison-mode-map "}" 'bison-electric-close-brace)
-  (define-key bison-mode-map ";" 'bison-electric-semicolon)
-  (define-key bison-mode-map "%" 'bison-electric-percent)
-  (define-key bison-mode-map "<" 'bison-electric-less-than)
-  (define-key bison-mode-map ">" 'bison-electric-greater-than)
-
-                                        ;(define-key bison-mode-map [tab] 'bison-indent-command)
-  (define-key bison-mode-map [tab] 'bison-indent-line)
-                                        ;(define-key bison-mode-map [f10] 'c-indent-command)
 
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'bison-indent-new-line)
