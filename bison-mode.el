@@ -686,25 +686,24 @@ If at a production, insert a semicolon on the next line at
 Otherwise insert a single colon."
   (interactive)
   (insert ":")
-  (if (not bison-disable-electric-keys?)
-      (if (and (= bison--grammar-rules-section (bison--section-start))
+  (unless bison-disable-electric-keys?
+    (when (and (= bison--grammar-rules-section (bison--section-start))
                (bison--production-p)
                (not (bison--within-started-production-p)))
-          (progn
-            (save-excursion		; put in a closing semicolon
-              (newline)
-              (indent-to-column bison-rule-separator-column)
-              (insert ";"))
-            (save-excursion		; remove opening whitespace
-              (if (re-search-backward
-                   "\\s "
-                   (save-excursion (beginning-of-line) (point))
-                   t)
-                  (delete-horizontal-space)))
-            (if (not (< (current-column) bison-rule-enumeration-column))
-                (newline))
-            (indent-to-column bison-rule-enumeration-column)))
-    ))
+      ;; insert closing semicolon
+      (save-excursion
+        (newline)
+        (indent-to-column bison-rule-separator-column)
+        (insert ";"))
+      ;; remove leading whitespace
+      (save-excursion
+        (when (re-search-backward "\\s " (line-beginning-position) t)
+          (delete-horizontal-space)))
+
+      (unless (< (current-column) bison-rule-enumeration-column)
+        (newline))
+
+      (indent-to-column bison-rule-enumeration-column))))
 
 (defun bison-electric-pipe ()
   "Insert a pipe character.
