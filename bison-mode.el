@@ -70,7 +70,6 @@
 ;(require 'flex-mode)			;; for flex-mode derivation
 (require 'make-regexp)			;; make-regexp
 
-
 ;; *************** internal vars ***************
 
 (defvar bison--declarers '("%union" "%token" "%type"
@@ -96,7 +95,6 @@
 (defvar bison--c-decls-section-closer "%}")
 (defvar bison--grammar-rules-section-delimeter "%%")
 
-
 ;; *************** user-definable vars ***************
 
 (defvar bison-rule-separator-column 8
@@ -108,7 +106,6 @@
 (defvar bison-decl-token-column 24
   "column in which tokens and states are listed when declared,
 as with %token, %type, ...")
-
 
 (defvar bison-all-electricity-off nil
   "non-nil means all electric keys will be disabled,
@@ -134,7 +131,6 @@ key's electric variable")
 (defvar bison-electric-greater-than-v t
   "non-nil means use an electric greater-than")
 
-
 (defvar bison-font-lock-keywords-1 c-font-lock-keywords
   "Basic highlighting for Bison mode.")
 
@@ -149,7 +145,6 @@ key's electric variable")
 
 (defvar bison-font-lock-keywords bison-font-lock-keywords-2
   "Default expressions to highlight in Bison mode")
-
 
 ;; *************** utilities ***************
 
@@ -212,7 +207,6 @@ and \(point\)"
       (beginning-of-line)	;; should already be there anyway
       (not (re-search-forward "[^ \t\n]" eol t)))))
 
-
 (defun goto-next-non-ws ()
   "goto and return pt of next non-whitespace character")
 
@@ -265,7 +259,6 @@ and \(point\)"
 
 )
 
-
 ;; *************** section parsers ***************
 
 (defun bison--section-p ()
@@ -310,7 +303,6 @@ and \(point\)"
 	    bison--bison-decls-section
 	  bison--pre-c-decls-section)))))
 
-
 ;; *************** syntax parsers ***************
 
 (defun bison--production-p ()
@@ -327,7 +319,6 @@ and \(point\)"
 (defun bison--find-production-opener ()
   "return and goto the point of the nearest production opener above \(point\)"
   (re-search-backward bison--production-re nil t))
-
 
 (defun bison--find-next-production ()
   "return the position of the beginning of the next production,
@@ -400,7 +391,6 @@ ENDER"
   "return t if the point is within a c comment delimited by \"/*\" \"*/\""
   (bison--within-some-sexp-p (regexp-quote comment-start)
 			     (regexp-quote comment-end)))
-
 
 (defun bison--within-string-p (&optional point)
   "
@@ -486,7 +476,6 @@ save excursion is done higher up, so i dont concern myself here.
 	      t))			; if no sexp close brace, then w/in
 	nil))))
 
-
 (defun bison--bison-decl-opener-p (bol eol)
   "return t if the current line is a bison declaration starter
 \(i.e. has a %type, %token, %right, ...\)"
@@ -530,7 +519,6 @@ alternative"
     (if (search-forward "|" eol t)
 	(not (bison--within-braced-c-expression-p section))
       nil)))
-
 
 ;; *************** indent functions ***************
 
@@ -851,7 +839,6 @@ bison-rule-enumeration-column"
 
   (self-insert-command (prefix-numeric-value arg)))
 
-
 (defun bison-electric-close-brace (arg)
   "If the close-brace \"}\" is used as the c-declarations section closer
 in \"%}\", then make sure the \"%}\" indents to the beginning of the line"
@@ -964,7 +951,6 @@ declaration section, then indent to bison-decl-token-column
 ;  (save-excursion
 ;    (goto-char (point-max))
 ;    (if (re-search-forward "^%%" nil t)
-
 
 (provide 'bison-mode)
 
