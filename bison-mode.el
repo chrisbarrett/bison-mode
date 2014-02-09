@@ -120,9 +120,8 @@ key's electric variable")
 (defvar bison-font-lock-keywords-2
   (append
    (list
-    (cons (concat "^\\(" (make-regexp bison--declarers) "\\)")
-          '(1 font-lock-keyword-face))
-    )
+    (cons (eval `(rx bol (group-n 1 (or ,@bison--declarers))))
+          '(1 font-lock-keyword-face)))
    bison-font-lock-keywords-1)
   "Gaudy highlighting for Bison mode.")
 
@@ -459,8 +458,8 @@ save excursion is done higher up, so I don't concern myself here.
 \(i.e. has a %type, %token, %right, ...\)"
   (save-excursion
     (goto-char bol)
-    (re-search-forward
-     (concat "^" (make-regexp (cl-copy-list bison--declarers))) eol t)))
+    (re-search-forward (eval `(rx bol (or ,@bison--declarers)))
+                       eol t)))
 
 (defun bison--production-opener-p (bol eol)
   "return t if the current line is a line that introduces a new production"
