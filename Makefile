@@ -15,15 +15,12 @@ OBJECTS      = $(SRCS:.el=.elc)
 PACKAGE_SRCS = $(SRCS) bison-mode-pkg.el
 PACKAGE_TAR  = bison-mode-$(VERSION).tar
 
-PRECOMMIT_SRC  = $(SCRIPT)/pre-commit.sh
-PRECOMMIT_HOOK = $(GIT_DIR)/hooks/pre-commit
-
 .PHONY: all
 all : env compile dist
 
 # Configure tooling and environment.
 .PHONY: env
-env : packages $(PRECOMMIT_HOOK)
+env : packages
 
 # Byte-compile elisp files.
 .PHONY: compile
