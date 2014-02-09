@@ -10,24 +10,17 @@ USER_EMACS_D = ~/.emacs.d
 USER_INIT_EL = $(USER_EMACS_D)/init.el
 USER_ELPA_D  = $(USER_EMACS_D)/elpa
 
-# Note that srcs MUST NOT INCLUDE flex-mode.el because it is not GPL and cannot
-# be included in the tar distribution.
-SRCS         = bison-mode.el
+SRCS         = $(filter-out %-pkg.el, $(wildcard *.el))
 OBJECTS      = $(SRCS:.el=.elc)
 PACKAGE_SRCS = $(SRCS) bison-mode-pkg.el
 PACKAGE_TAR  = bison-mode-$(VERSION).tar
-
-FLEX_MODE_URL = http://ftp.sunet.se/pub/gnu/emacs-lisp/incoming/flex-mode.el
 
 .PHONY: all
 all : env compile dist
 
 # Configure tooling and environment.
 .PHONY: env
-env : packages flex-mode.el
-
-flex-mode.el :
-	curl -# $(FLEX_MODE_URL) > flex-mode.el
+env : packages
 
 # Byte-compile elisp files.
 .PHONY: compile

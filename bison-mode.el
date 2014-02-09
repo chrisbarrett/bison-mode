@@ -53,7 +53,7 @@
 
 (require 'flex-mode nil t)
 (require 'cl-lib)
-(require 'cc-vars)
+(require 'cc-mode)
 
 ;; *************** internal vars ***************
 
@@ -194,7 +194,7 @@ and \(point\)"
 ;;;###autoload
 (defvar bison-mode-map
   (let ((km (make-sparse-keymap)))
-    (set-keymap-parent km flex-mode-map)
+    (set-keymap-parent km c-mode-map)
     (define-key km (kbd ":") 'bison-electric-colon)
     (define-key km (kbd "|") 'bison-electric-pipe)
     (define-key km (kbd "{") 'bison-electric-open-brace)
@@ -205,10 +205,10 @@ and \(point\)"
     (define-key km (kbd ">") 'bison-electric-greater-than)
     (define-key km (kbd "TAB") 'bison-indent-line)
     km)
-  "Keymap for `bison-mode'.  Inherits from `flex-mode-map'.")
+  "Keymap for `bison-mode'.")
 
 ;;;###autoload
-(define-derived-mode bison-mode flex-mode "Bison"
+(define-derived-mode bison-mode c-mode "Bison"
   "Major mode for editing bison/yacc files.
 
 \\{bison-mode-map}"
