@@ -51,8 +51,7 @@
 
 ;;; Code:
 
-                                        ;(require 'flex-mode)			;; for flex-mode derivation
-(require 'make-regexp)			;; make-regexp
+(require 'flex-mode nil t)
 (require 'cl-lib)
 
 ;; *************** internal vars ***************
