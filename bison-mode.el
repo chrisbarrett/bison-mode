@@ -22,29 +22,11 @@
 ;;
 ;; Provides a major-mode for bison (.y) files.
 
-;; Bison Sections:
-;;
-;; There are five sections to a bison file (if you include the area above the C
-;; declarations section). Many commands in this file perform a different action
-;; depending on this context.
+;; A bison file is divided into a number of sections. Many commands in this
+;; package perform a different actions depending on the current section.
 
-;; Indentation:
-;;
-;; Indentation is tries to be context-sensitive. There is a procedure,
-;; `bison--within-braced-c-expression-p', that checks for being in C code. If
-;; point is in C code, it should fall back to the user-defined indentation
-;; behaviour for C.
-;;
-;; There are four variables which control bison indentation within either the
-;; declarations grammar sections:
-;;
-;; - `bison-rule-separator-column'
-;;
-;; - `bison-rule-separator-column'
-;;
-;; - `bison-decl-type-column'
-;;
-;; - `bison-decl-token-column'
+;; bison-mode's indentation commands are context-sensitive. If point is in C
+;; code the mode falls back the normal indentation behaviour for C.
 
 ;;; Code:
 
