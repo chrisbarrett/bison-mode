@@ -209,32 +209,28 @@ and \(point\)"
 
 ;;;###autoload
 (define-derived-mode bison-mode flex-mode "Bison"
-  "Major mode for editing bison/yacc files
+  "Major mode for editing bison/yacc files.
 
 \\{bison-mode-map}"
   (setq-local c-basic-offset 4)
   (c-set-offset 'knr-argdecl-intro 0)
 
-  ;; remove auto and hungry anything
+  ;; Disable disruptive C minor modes.
   (c-toggle-auto-hungry-state -1)
-  (c-toggle-auto-state -1)
+  (c-toggle-auto-newline -1)
   (c-toggle-hungry-state -1)
 
-  (make-local-variable 'indent-line-function)
-  (setq indent-line-function 'bison-indent-new-line)
-  (make-local-variable 'comment-start)
-  (make-local-variable 'comment-end)
-  (setq comment-start "/*"
-        comment-end "*/")
-  (make-local-variable 'font-lock-keywords)
-  (setq font-lock-keywords nil)
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '((bison-font-lock-keywords
-                              bison-font-lock-keywords-1
-                              bison-font-lock-keywords-2)
-                             nil nil nil))
+  ;; Configure indentation and comments.
+  (setq-local indent-line-function 'bison-indent-new-line)
+  (setq-local comment-start "/*")
+  (setq-local comment-end "*/")
 
-  )
+  ;; Configure font-lock.
+  (setq-local font-lock-keywords nil)
+  (setq-local font-lock-defaults '((bison-font-lock-keywords
+                                    bison-font-lock-keywords-1
+                                    bison-font-lock-keywords-2)
+                                   nil nil nil)))
 
 ;; *************** section parsers ***************
 
