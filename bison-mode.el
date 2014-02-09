@@ -210,8 +210,8 @@ return nil if either PT1 or PT2 are outside these bounds."
 
 ;;;; Section Parsers
 
-(defun bison--section-p ()
-  "Return the section at point as a string."
+(defun bison--section-start ()
+  "Return the start of the section at point."
   (save-excursion
     (let ((bound (point)))
       (goto-char (point-min))
@@ -427,7 +427,7 @@ BOL and EOL constrain the search."
 Return nil of not found."
   (save-excursion
     (if (search-forward ";" nil t)
-        (if (not (bison--within-braced-c-expression-p (bison--section-p)))
+        (if (not (bison--within-braced-c-expression-p (bison--section-start)))
             (point)
           (bison--find-bison-semicolon))
       nil)))
@@ -479,7 +479,7 @@ BOL and EOL constrain the search."
 
 Assumes that we are indenting a new line, i.e. at column 0."
   (interactive)
-  (let ((section (bison--section-p)))
+  (let ((section (bison--section-start)))
     (cond
      ((or c-sexp (bison--within-braced-c-expression-p section))
       (cond
@@ -527,7 +527,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
          (bol (save-excursion (beginning-of-line) (point)))
          (eol (save-excursion (end-of-line) (point)))
          )
-    (let* ((section (bison--section-p))
+    (let* ((section (bison--section-start))
            (c-sexp (bison--within-braced-c-expression-p section))
            (ws-line (line-of-whitespace-p))
            )
@@ -687,7 +687,7 @@ Otherwise insert a single colon."
   (interactive)
   (insert ":")
   (if (not bison-disable-electric-keys?)
-      (if (and (= bison--grammar-rules-section (bison--section-p))
+      (if (and (= bison--grammar-rules-section (bison--section-start))
                (bison--production-p)
                (not (bison--within-started-production-p)))
           (progn
@@ -711,7 +711,7 @@ Otherwise insert a single colon."
 If the pipe was used as a rule separator, align the pipe accordingly."
   (interactive)
   (if (and (not bison-disable-electric-keys?)
-           (= bison--grammar-rules-section (bison--section-p))
+           (= bison--grammar-rules-section (bison--section-start))
            (line-of-whitespace-p)
            )
       (progn
@@ -726,7 +726,7 @@ If the pipe was used as a rule separator, align the pipe accordingly."
   "Insert an opening curly brace and apply formatting."
   (interactive)
   (if (not bison-disable-electric-keys?)
-      (let ((section (bison--section-p)))
+      (let ((section (bison--section-start)))
         (cond ((and (= section bison--grammar-rules-section)
                     (not (bison--within-braced-c-expression-p section))
                     (not (previous-non-ws-p)))
@@ -749,7 +749,7 @@ If the pipe was used as a rule separator, align the pipe accordingly."
   (insert "}")
   (if (not bison-disable-electric-keys?)
       (cond ((search-backward "%}" (- (point) 2) t)
-             (if (= (bison--section-p) bison--c-decls-section)
+             (if (= (bison--section-start) bison--c-decls-section)
                  (progn
                    (delete-horizontal-space)
                    (forward-char 2))	; for "%}"
@@ -760,7 +760,7 @@ If the pipe was used as a rule separator, align the pipe accordingly."
 If this begins a declaration, move it to the start column."
   (interactive)
   (if (not bison-disable-electric-keys?)
-      (let ((section (bison--section-p)))
+      (let ((section (bison--section-start)))
         (if (and (= section bison--bison-decls-section)
                  (not (bison--within-braced-c-expression-p section))
                  (not (previous-non-ws-p))
@@ -773,7 +773,7 @@ If this begins a declaration, move it to the start column."
 If it begins a type declaration, indent to `bison-decl-type-column'."
   (interactive)
   (if (not bison-disable-electric-keys?)
-      (if (and (= (bison--section-p) bison--bison-decls-section)
+      (if (and (= (bison--section-start) bison--bison-decls-section)
                (bison--bison-decl-start-p
                 (save-excursion (beginning-of-line) (point))
                 (point)))
