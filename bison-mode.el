@@ -474,48 +474,59 @@ BOL and EOL constrain the search."
             ))
       (c-indent-line))))
 
-(defun bison-indent-new-line (&optional c-sexp)
+(defun bison--c-production-indentation-syntax ()
+  "Return indentation info for c-indent-line."
+  (save-excursion
+    (forward-line -1)
+    (when (bison--production-opener-p (line-beginning-position)
+                                      (line-end-position))
+      (list
+       (cons 'defun-block-intro
+             (progn
+               (re-search-forward bison--production-re)
+               (- (re-search-forward "[^ \t]")
+                  1)))))))
+
+(defun bison--search-backward-semicolon ()
+  "Search backward for a semicolon."
+  (let ((limit (or (save-excursion (bison--find-production-opener))
+                   (bison--find-grammar-begin))))
+    (search-backward ";" limit t)))
+
+(defun bison--grammar-rule-start-col (section-start)
+  "Find the start column of the current grammar rule.
+Bounded by SECTION-START."
+  (save-excursion
+    (cond ((and (bison--search-backward-semicolon)
+                (bison--within-braced-c-expression-p section-start))
+           bison-rule-enumeration-column)
+          ((save-excursion (bison--find-production-opener))
+           bison-rule-enumeration-column)
+          (t
+           0))))
+
+(defun bison-indent-new-line (&optional c-sexp?)
   "Indent a fresh line of bison code.
+
+If C-SEXP? is non-nil, indent as C code.
 
 Assumes that we are indenting a new line, i.e. at column 0."
   (interactive)
-  (let ((section (bison--section-start)))
+  (let ((sec (bison--section-start)))
     (cond
-     ((or c-sexp (bison--within-braced-c-expression-p section))
-      (cond
-       ((= section bison--grammar-rules-section)
-        (c-indent-line
-         (save-excursion
-           (forward-line -1)
-           (let ((bol (save-excursion (beginning-of-line) (point)))
-                 (eol (save-excursion (end-of-line) (point))))
-             (if (bison--production-opener-p bol eol)
-                 (list
-                  (cons 'defun-block-intro
-                        (progn
-                          (re-search-forward bison--production-re) ; SIGERR
-                          (- (re-search-forward "[^ \t]")          ; SIGERR
-                             1))))
-               nil)))))
-       (t (c-indent-line))))
-     ((= section bison--pre-c-decls-section)
+     ((or c-sexp? (bison--within-braced-c-expression-p sec))
+      (c-indent-line (and
+                      (= sec bison--grammar-rules-section)
+                      (bison--c-production-indentation-syntax))))
+
+     ((= sec bison--pre-c-decls-section)
       (c-indent-line))
-     ((= section bison--bison-decls-section)
+
+     ((= sec bison--bison-decls-section)
       (indent-to-column bison-decl-token-column))
-     ((= section bison--grammar-rules-section)
-      (indent-to-column
-       (save-excursion
-         (let* ((bound (or (save-excursion (bison--find-production-opener))
-                           (bison--find-grammar-begin)))
-                (prev-semi (search-backward ";" bound t))
-                )
-           (if prev-semi
-               (if (bison--within-braced-c-expression-p section) ; CRACK
-                   bison-rule-enumeration-column
-                 0)
-             (if (save-excursion (bison--find-production-opener))
-                 bison-rule-enumeration-column
-               0)))))))))
+
+     ((= sec bison--grammar-rules-section)
+      (indent-to-column (bison--grammar-rule-start-col sec))))))
 
 (defun bison-indent-line ()
   "Indent a line of bison code."
