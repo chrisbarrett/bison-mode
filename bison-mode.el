@@ -97,8 +97,6 @@ as with %token, %type, ...")
 nil means that a bison-electric-* key will be on or off based on the individual
 key's electric variable")
 
-;;; i know lisp has the dual name spaces, but i find it more aesthetically
-;;; pleasing to not take advantage of that
 (defvar bison-electric-colon-v t
   "non-nil means use an electric colon")
 (defvar bison-electric-pipe-v t
@@ -399,7 +397,7 @@ found."
 (defun bison--within-braced-c-expression-p-h (section low-pt)
   "
 Notes:
-save excursion is done higher up, so i dont concern myself here.
+save excursion is done higher up, so I don't concern myself here.
 "
   (cond ((= section bison--pre-c-decls-section) nil)
         ((= section bison--c-decls-section)
@@ -427,7 +425,7 @@ save excursion is done higher up, so i dont concern myself here.
   "
 Notes:
 HIGH-PT goes toward (point-min), LOW-PT goes toward (point-max)
-save excursion is done higher up, so i dont concern myself here.
+save excursion is done higher up, so I don't concern myself here.
 "
   (let ((pt (point)))
     (let ((success nil) (count 1) (done nil))
@@ -843,7 +841,7 @@ bison-rule-separator-column
 a semicolon is deemed to be used for ending a production if it is not found
 within braces
 
-this is just self-insert-command as i have yet to write the actual
+this is just self-insert-command as I have yet to write the actual
 bison-electric-semicolon function yet
 "
   (interactive "P")
