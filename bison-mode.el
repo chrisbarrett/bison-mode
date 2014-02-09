@@ -20,10 +20,7 @@
 
 ;;; Commentary:
 ;;
-;; Provides a major-mode for bison (.y) files. It requires `flex-mode', which
-;; cannot be included because it is not GPL'd. It can be obtained here:
-;;
-;;   http://ftp.sunet.se/pub/gnu/emacs-lisp/incoming/flex-mode.el
+;; Provides a major-mode for bison (.y) files.
 
 ;; Bison Sections:
 ;;
