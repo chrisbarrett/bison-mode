@@ -759,13 +759,13 @@ If the pipe was used as a rule separator, align the pipe accordingly."
   "Insert a % character.
 If this begins a declaration, move it to the start column."
   (interactive)
-  (if (not bison-disable-electric-keys?)
-      (let ((section (bison--section-start)))
-        (if (and (= section bison--bison-decls-section)
-                 (not (bison--within-braced-c-expression-p section))
-                 (not (previous-non-ws-p))
-                 (not (= (current-column) 0)))
-            (delete-horizontal-space))))
+  (unless bison-disable-electric-keys?
+    (when (= (bison--section-start) bison--bison-decls-section)
+      (unless (or (bison--within-braced-c-expression-p (bison--section-start))
+                  (previous-non-ws-p)
+                  (zerop (current-column)))
+        (delete-horizontal-space))))
+
   (insert "%"))
 
 (defun bison-electric-less-than ()
