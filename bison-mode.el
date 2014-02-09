@@ -787,19 +787,16 @@ If it begins a type declaration, indent to `bison-decl-type-column'."
 If it ends a type declaration, indent to `bison-decl-token-column'."
   (interactive)
   (insert ">")
-  (if (not bison-disable-electric-keys?)
-      (let ((current-pt (point))
-            (bol (save-excursion (beginning-of-line) (point))))
-        (if (and (= (bison--section-p) bison--bison-decls-section)
-                 (bison--bison-decl-start-p bol (point)))
-            (if (search-backward "<" bol t)
-                (if (re-search-forward
-                     (concat "<" bison--word-constituent-re "+>")
-                     current-pt t)
-                    (if (not (following-non-ws-p))
-                        (progn
-                          (delete-horizontal-space)
-                          (indent-to-column bison-decl-token-column)))))))))
+  (unless bison-disable-electric-keys?
+    (let ((start-pos (point)))
+      (when (and (= (bison--section-start) bison--bison-decls-section)
+                 (bison--bison-decl-start-p (line-beginning-position) (point))
+                 (search-backward "<" (line-beginning-position) t)
+                 (re-search-forward (concat "<" bison--word-constituent-re "+>")
+                                    start-pos t))
+        (unless (following-non-ws-p)
+          (delete-horizontal-space)
+          (indent-to-column bison-decl-token-column))))))
 
 (provide 'bison-mode)
 
