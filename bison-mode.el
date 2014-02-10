@@ -79,10 +79,10 @@ Used for %token, %type, etc."
   '("%union" "%token" "%type" "%left" "%right" "%nonassoc")
   "List of commands which can declare a token or state type.")
 
-(defvar bison--word-constituent-re "\\(\\sw\\|_\\)")
+(defvar bison--word-constituent-re (rx (or word "_")))
 
 (defvar bison--production-re
-  (concat "^" bison--word-constituent-re "+:"))
+  (eval `(rx bol (+ (regexp ,bison--word-constituent-re)) ":")))
 
 (defvar bison--pre-c-decls-section 0
   "Section before c-declarations-section, if that section exists.")
@@ -245,7 +245,7 @@ Return nil if the start cannot be found."
 (defun bison--in-c-comment? ()
   "Non-nil if point is inside a C comment delimited by \"/*\" \"*/\"."
   (bison--between-delimiters? (regexp-quote comment-start)
-                               (regexp-quote comment-end)))
+                              (regexp-quote comment-end)))
 
 (cl-defun bison--in-string? (&optional (pos (point)))
   "Non-nil if POS is inside a string."
