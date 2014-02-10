@@ -5,7 +5,7 @@
 ;; Author:   Eric Beuscher <beuscher@eecs.tulane.edu>
 ;; Created:  2 Feb 1998
 ;; Version:  0.2
-;; Package-Requires: ((cl-lib "0.2") (dash "2.5.0"))
+;; Package-Requires: ((cl-lib "0.2") (dash "2.5.0") (s "1.7.0"))
 ;; Keywords: bison-mode, yacc-mode
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@
 (require 'cl-lib)
 (require 'cc-mode)
 (require 'dash)
+(require 's)
 
 (defgroup bison-mode nil
   "Major mode for editing bison and yacc files"
@@ -120,32 +121,20 @@ Used for %token, %type, etc."
 
 ;;;; Utility Functions
 
-(defun bison--any-spaces-on-line-before-point? ()
-  "Non-nil if there is whitespace between the beginning of the line and point."
-  (save-excursion
-    (let ((pt (point)))
-      (goto-char (line-beginning-position))
-      (re-search-forward (rx space) pt t))))
-
 (defun bison--any-non-spaces-on-line-before-point? ()
   "Non-nil if there are non-whitespace chars between bol and point."
-  (save-excursion
-    (let ((pt (point)))
-      (goto-char (line-beginning-position))
-      (re-search-forward (rx (not space)) pt t))))
+  (s-matches? (rx (not space))
+              (buffer-substring (line-beginning-position) (point))))
 
 (defun bison--any-non-spaces-on-line-after-point? ()
   "Non-nil if there are non-whitespace characters on this line."
-  (save-excursion
-    (let ((pt (point)))
-      (goto-char (line-end-position))
-      (re-search-backward (rx (not space)) pt t))))
+  (s-matches? (rx (not space))
+              (buffer-substring (point) (line-end-position))))
 
 (defun bison--blank-line? ()
   "Non-nil if the current line is empty or entirely whitespace."
-  (save-excursion
-    (goto-char (line-beginning-position))
-    (not (re-search-forward "[^ \t\n]" (line-end-position) t))))
+  (s-blank? (s-trim (buffer-substring (line-beginning-position)
+                                      (line-end-position)))))
 
 ;;;; Mode Definition
 
@@ -243,7 +232,9 @@ Used for %token, %type, etc."
     (let ((pt (point)))
       (goto-char (line-beginning-position))
       (-when-let (prod-end (re-search-forward bison--production-re pt t))
-        (unless (bison--any-spaces-on-line-before-point?)
+        (unless (s-matches? (rx space)
+                            (buffer-substring (line-beginning-position)
+                                              (point)))
           (= prod-end pt))))))
 
 (defun bison--production-start-pos ()
