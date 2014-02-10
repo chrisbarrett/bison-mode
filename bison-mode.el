@@ -427,154 +427,151 @@ Assumes that we are indenting a new line, i.e. at column 0."
   (let* ((pos (- (point-max) (point)))
          (reset-pt (lambda ()
                      (if (> (- (point-max) pos) (point))
-                         (goto-char (- (point-max) pos))))))
-    (let* ((section (bison--section-start))
-           (c-sexp (bison--in-braced-c-expression? section))
-           (ws-line (bison--blank-line?))
-           )
-      (cond
-       ;; if you are a line of whitespace, let indent-new-line take care of it
-       (ws-line
-        (bison-indent-new-line c-sexp))
+                         (goto-char (- (point-max) pos)))))
+         (section (bison--section-start))
+         (c-sexp (bison--in-braced-c-expression? section))
+         (ws-line (bison--blank-line?)))
+    (cond
+     (ws-line
+      (bison-indent-new-line c-sexp))
 
-       ((= section bison--pre-c-decls-section)
-        ;; leave things alone
-        )
+     ((= section bison--pre-c-decls-section))
 
-       ((= section bison--c-decls-section)
-        (if c-sexp
-            (bison--indent-c-sexp section 0)
-          (unless (= (current-indentation) 0)
-            (back-to-indentation)
-            (delete-horizontal-space)
-            (funcall reset-pt))))
+     ((= section bison--c-decls-section)
+      (if c-sexp
+          (bison--indent-c-sexp section 0)
+        (unless (= (current-indentation) 0)
+          (back-to-indentation)
+          (delete-horizontal-space)
+          (funcall reset-pt))))
 
-       ((= section bison--bison-decls-section)
-        (let ((opener (bison--at-decl-start? (line-end-position))))
-          (cond
-           (opener
-            (goto-char opener)
-            (skip-chars-forward " \t" (line-end-position))
-            (if (looking-at "{")
-                (save-excursion
-                  (if (bison--any-non-spaces-on-line-after-point?)
-                      (progn
-                        (forward-char 1)
-                        (delete-horizontal-space)
-                        (newline)
-                        (bison-indent-new-line t))))
-              (let ((complete-type t))
-                (if (looking-at "<")
-                    (progn
-                      (setq complete-type nil)
-                      (if (not (= (current-column) bison-decl-type-column))
-                          (progn
+     ((= section bison--bison-decls-section)
+      (let ((opener (bison--at-decl-start? (line-end-position))))
+        (cond
+         (opener
+          (goto-char opener)
+          (skip-chars-forward " \t" (line-end-position))
+          (cond ((looking-at "{")
+                 (save-excursion
+                   (when (bison--any-non-spaces-on-line-after-point?)
+                     (forward-char 1)
+                     (delete-horizontal-space)
+                     (newline)
+                     (bison-indent-new-line t))))
+                (t
+                 (let ((complete-type t))
+                   (when (looking-at "<")
+                     (setq complete-type nil)
+                     (cond ((not (= (current-column) bison-decl-type-column))
                             (delete-horizontal-space)
                             (indent-to-column bison-decl-type-column))
-                        (and (re-search-forward
-                              (concat "<" bison--word-constituent-re "+>")
-                              (line-end-position) t)
-                             (setq complete-type t)))))
-                (and complete-type
-                     (skip-chars-forward " \t" (line-end-position))
-                     (looking-at
-                      (concat "\\(" bison--word-constituent-re "\\|'\\)"))
-                     (if (not (= (current-column) bison-decl-token-column))
-                         (progn
-                           (delete-horizontal-space)
-                           (indent-to-column bison-decl-token-column))))))
-            (funcall reset-pt))
-           (c-sexp
-            (bison--indent-c-sexp section 0))
-           (t
-            (back-to-indentation)
-            ;; only tab in names, leave comments alone
-            (cond (;; put word-constiuents in bison-decl-token-column
-                   (looking-at bison--word-constituent-re)
-                   (if (not (= (current-column) bison-decl-token-column))
-                       (progn
-                         (delete-horizontal-space)
-                         (indent-to-column bison-decl-token-column))))
-                  ;; put/keep close-brace in the 0 column
-                  ((looking-at "}")
-                   (if (not (= (current-column) 0))
-                       (delete-horizontal-space)))
-                  ;; leave comments alone
-                  ((looking-at (regexp-quote comment-start)) nil)
-                  ;; else do nothing
-                  )
-            (funcall reset-pt)))))
-       ((= section bison--grammar-rules-section)
-        (cond
-         ((bison--at-production-start?)
-          (beginning-of-line)
-          (re-search-forward bison--production-re);; SIGERR
-          (if (bison--any-non-spaces-on-line-after-point?)
-              (if (> (current-column) bison-rule-enumeration-column)
-                  (progn
-                    (delete-horizontal-space)
-                    (newline)
-                    (indent-to-column bison-rule-enumeration-column))
-                (save-excursion
-                  (re-search-forward bison--word-constituent-re);; SIGERR
-                  (let ((col (current-column)))
-                    (cond ((> col (+ 1 bison-rule-enumeration-column))
-                           (forward-char -1)
-                           (delete-horizontal-space)
-                           (indent-to-column bison-rule-enumeration-column))
-                          ((< col (+ 1 bison-rule-enumeration-column))
-                           (forward-char -1)
-                           (indent-to-column
-                            bison-rule-enumeration-column)))))))
+                           (t
+                            (and (re-search-forward
+                                  (concat "<" bison--word-constituent-re "+>")
+                                  (line-end-position) t)
+                                 (setq complete-type t)))))
+                   (and complete-type
+                        (skip-chars-forward " \t" (line-end-position))
+                        (looking-at
+                         (concat "\\(" bison--word-constituent-re "\\|'\\)"))
+                        (unless (not (= (current-column) bison-decl-token-column))
+                          (delete-horizontal-space)
+                          (indent-to-column bison-decl-token-column))))))
           (funcall reset-pt))
-         ((bison--production-alternative? section)
-          (back-to-indentation);; should put point on "|"
-          (if (not (= (current-column) bison-rule-separator-column))
-              (progn
-                (delete-horizontal-space)
-                (indent-to-column bison-rule-separator-column)))
-          (forward-char 1)
-          (if (bison--any-non-spaces-on-line-after-point?)
-              (save-excursion
-                (re-search-forward bison--word-constituent-re);; SIGERR
-                (let ((col (current-column)))
-                  (cond ((> col (+ 1 bison-rule-enumeration-column))
-                         (forward-char -1)
-                         (delete-horizontal-space)
-                         (indent-to-column bison-rule-enumeration-column))
-                        ((< col (+ 1 bison-rule-enumeration-column))
-                         (forward-char -1)
-                         (indent-to-column
-                          bison-rule-enumeration-column))))))
-          (funcall reset-pt))
+
          (c-sexp
-          (bison--indent-c-sexp section bison-rule-enumeration-column)
-          (funcall reset-pt))
-         ((bison--inside-production-body? section)
-          (back-to-indentation)
-          (if (not (= (current-column) bison-rule-enumeration-column))
-              (progn
-                (delete-horizontal-space)
-                (indent-to-column
-                 bison-rule-enumeration-column)))
-          (funcall reset-pt))
+          (bison--indent-c-sexp section 0))
+
          (t
-          (let ((cur-ind (current-indentation)))
-            (if (eq (save-excursion
+          (back-to-indentation)
+          ;; only tab in names, leave comments alone
+          (cond
+           ;; put word-constiuents in bison-decl-token-column
+           ((looking-at bison--word-constituent-re)
+            (unless (= (current-column) bison-decl-token-column)
+              (delete-horizontal-space)
+              (indent-to-column bison-decl-token-column)))
+           ;; Put or keep close-brace in the 0 column
+           ((looking-at "}")
+            (unless (zerop (current-column))
+              (delete-horizontal-space)))
+           ;; Leave comments alone
+           ((looking-at (regexp-quote comment-start)) nil))
+          (funcall reset-pt)))))
+
+     ((= section bison--grammar-rules-section)
+      (cond
+       ((bison--at-production-start?)
+        (beginning-of-line)
+        (re-search-forward bison--production-re)
+        (when (bison--any-non-spaces-on-line-after-point?)
+          (cond ((> (current-column) bison-rule-enumeration-column)
+                 (delete-horizontal-space)
+                 (newline)
+                 (indent-to-column bison-rule-enumeration-column))
+                (t
+                 (save-excursion
+                   (re-search-forward bison--word-constituent-re) ;; SIGERR
+                   (let ((col (current-column)))
+                     (cond ((> col (+ 1 bison-rule-enumeration-column))
+                            (forward-char -1)
+                            (delete-horizontal-space)
+                            (indent-to-column bison-rule-enumeration-column))
+                           ((< col (+ 1 bison-rule-enumeration-column))
+                            (forward-char -1)
+                            (indent-to-column
+                             bison-rule-enumeration-column))))))))
+        (funcall reset-pt))
+
+       ((bison--production-alternative? section)
+
+        ;; Move point to "|"
+        (back-to-indentation)
+
+        (unless (= (current-column) bison-rule-separator-column)
+          (delete-horizontal-space)
+          (indent-to-column bison-rule-separator-column))
+        (forward-char 1)
+        (when (bison--any-non-spaces-on-line-after-point?)
+          (save-excursion
+            (re-search-forward bison--word-constituent-re)
+            (let ((col (current-column)))
+              (cond ((> col (+ 1 bison-rule-enumeration-column))
+                     (forward-char -1)
+                     (delete-horizontal-space)
+                     (indent-to-column bison-rule-enumeration-column))
+                    ((< col (+ 1 bison-rule-enumeration-column))
+                     (forward-char -1)
+                     (indent-to-column
+                      bison-rule-enumeration-column))))))
+        (funcall reset-pt))
+
+       (c-sexp
+        (bison--indent-c-sexp section bison-rule-enumeration-column)
+        (funcall reset-pt))
+
+       ((bison--inside-production-body? section)
+        (back-to-indentation)
+        (unless (= (current-column) bison-rule-enumeration-column)
+          (delete-horizontal-space)
+          (indent-to-column
+           bison-rule-enumeration-column))
+        (funcall reset-pt))
+
+       (t
+        (let ((cur-ind (current-indentation)))
+          (when (eq (save-excursion
                       (search-backward "}"
                                        (line-beginning-position) t))
                     cur-ind)
-                (if (not (= cur-ind bison-rule-enumeration-column))
-                    (progn
-                      (back-to-indentation)
-                      (delete-horizontal-space)
-                      (indent-to-column bison-rule-enumeration-column)
-                      (funcall reset-pt)))
-              ;; else leave alone
-              )))))
-       ((= section bison--c-code-section)
-        (c-indent-line))
-       ))))
+            (unless (= cur-ind bison-rule-enumeration-column)
+              (back-to-indentation)
+              (delete-horizontal-space)
+              (indent-to-column bison-rule-enumeration-column)
+              (funcall reset-pt)))))))
+
+     ((= section bison--c-code-section)
+      (c-indent-line)))))
 
 ;;;; Electric Commands
 
