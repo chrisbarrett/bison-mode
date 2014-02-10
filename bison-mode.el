@@ -136,53 +136,6 @@ Used for %token, %type, etc."
   (s-blank? (s-trim (buffer-substring (line-beginning-position)
                                       (line-end-position)))))
 
-;;;; Mode Definition
-
-(make-variable-buffer-local 'c-offsets-alist)
-
-;;;###autoload
-(defvar bison-mode-map
-  (let ((km (make-sparse-keymap)))
-    (set-keymap-parent km c-mode-map)
-    (define-key km (kbd ":") 'bison-electric-colon)
-    (define-key km (kbd "|") 'bison-electric-pipe)
-    (define-key km (kbd "{") 'bison-electric-open-brace)
-    (define-key km (kbd "}") 'bison-electric-close-brace)
-    (define-key km (kbd "%") 'bison-electric-percent)
-    (define-key km (kbd "<") 'bison-electric-less-than)
-    (define-key km (kbd ">") 'bison-electric-greater-than)
-    (define-key km (kbd "TAB") 'bison-indent-line)
-    km)
-  "Keymap for `bison-mode'.")
-
-;;;###autoload
-(define-derived-mode bison-mode c-mode "Bison"
-  "Major mode for editing bison/yacc files.
-
-\\{bison-mode-map}"
-  (setq-local c-basic-offset 4)
-  (c-set-offset 'knr-argdecl-intro 0)
-
-  ;; Disable disruptive C minor modes.
-  (c-toggle-auto-hungry-state -1)
-  (c-toggle-auto-newline -1)
-  (c-toggle-hungry-state -1)
-
-  ;; Configure indentation and comments.
-  (setq-local indent-line-function 'bison-indent-new-line)
-  (setq-local comment-start "/*")
-  (setq-local comment-end "*/")
-
-  ;; Configure font-lock.
-  (setq-local font-lock-keywords nil)
-  (setq-local font-lock-defaults '((bison-font-lock-keywords
-                                    bison-font-lock-keywords-1
-                                    bison-font-lock-keywords-2)
-                                   nil nil nil)))
-
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.y$" . bison-mode))
-
 ;;;; Section Parsers
 
 (defun bison--section-start ()
@@ -745,6 +698,53 @@ If it ends a type declaration, indent to `bison-decl-token-column'."
         (unless (bison--any-non-spaces-on-line-after-point?)
           (delete-horizontal-space)
           (indent-to-column bison-decl-token-column))))))
+
+;;;; Mode Definition
+
+(make-variable-buffer-local 'c-offsets-alist)
+
+;;;###autoload
+(defvar bison-mode-map
+  (let ((km (make-sparse-keymap)))
+    (set-keymap-parent km c-mode-map)
+    (define-key km (kbd ":") 'bison-electric-colon)
+    (define-key km (kbd "|") 'bison-electric-pipe)
+    (define-key km (kbd "{") 'bison-electric-open-brace)
+    (define-key km (kbd "}") 'bison-electric-close-brace)
+    (define-key km (kbd "%") 'bison-electric-percent)
+    (define-key km (kbd "<") 'bison-electric-less-than)
+    (define-key km (kbd ">") 'bison-electric-greater-than)
+    (define-key km (kbd "TAB") 'bison-indent-line)
+    km)
+  "Keymap for `bison-mode'.")
+
+;;;###autoload
+(define-derived-mode bison-mode c-mode "Bison"
+  "Major mode for editing bison/yacc files.
+
+\\{bison-mode-map}"
+  (setq-local c-basic-offset 4)
+  (c-set-offset 'knr-argdecl-intro 0)
+
+  ;; Disable disruptive C minor modes.
+  (c-toggle-auto-hungry-state -1)
+  (c-toggle-auto-newline -1)
+  (c-toggle-hungry-state -1)
+
+  ;; Configure indentation and comments.
+  (setq-local indent-line-function 'bison-indent-new-line)
+  (setq-local comment-start "/*")
+  (setq-local comment-end "*/")
+
+  ;; Configure font-lock.
+  (setq-local font-lock-keywords nil)
+  (setq-local font-lock-defaults '((bison-font-lock-keywords
+                                    bison-font-lock-keywords-1
+                                    bison-font-lock-keywords-2)
+                                   nil nil nil)))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.y$" . bison-mode))
 
 (provide 'bison-mode)
 
