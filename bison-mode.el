@@ -131,10 +131,14 @@ Used for %token, %type, etc."
   (s-matches? (rx (not space))
               (buffer-substring (point) (line-end-position))))
 
+(defun bison--current-line ()
+  "Return the current line as a string."
+  (buffer-substring-no-properties (line-beginning-position)
+                                  (line-end-position)))
+
 (defun bison--blank-line? ()
   "Non-nil if the current line is empty or entirely whitespace."
-  (s-blank? (s-trim (buffer-substring (line-beginning-position)
-                                      (line-end-position)))))
+  (s-blank? (s-trim (bison--current-line))))
 
 ;;;; Section Parsers
 
@@ -300,21 +304,17 @@ EXPR-START-POS sets a starting constraint for the search."
           (< expr-start-pos end-pt)
         t))))
 
-(cl-defun bison--at-decl-start? (&optional (limit (line-end-position)))
+(defun bison--at-decl-start? (limit)
   "Non-nil if the current line is the beginning of a bison declaration.
 Examples include %type, %token, %right.
 
 LIMIT sets an end for the search."
-  (save-excursion
-    (goto-char (line-beginning-position))
-    (re-search-forward (eval `(rx bol (or ,@bison--declarations)))
-                       limit t)))
+  (s-matches? (eval `(rx bol (or ,@bison--declarations)))
+              (buffer-substring (line-beginning-position) limit)))
 
 (defun bison--at-production-start? ()
   "Non-nil if the current line introduces a new production."
-  (save-excursion
-    (goto-char (line-beginning-position))
-    (re-search-forward bison--production-re (line-end-position) t)))
+  (s-matches? bison--production-re (bison--current-line)))
 
 (defun bison--find-bison-semicolon ()
   "Return the position of next semicolon not within braces.
@@ -333,13 +333,12 @@ Note that this procedure will fail if it is in a production header."
     (when (= bison--grammar-rules-section section-start)
       (re-search-backward bison--production-re nil t))))
 
-(defun bison--production-alternative? (bol limit section-start)
+(defun bison--production-alternative? (section-start)
   "Non-nil if the current line is a rule alternative.
-BOL and EOL constrain the search.
 SECTION-START is the start of the current section."
   (save-excursion
-    (goto-char bol)
-    (when (search-forward "|" limit t)
+    (goto-char (line-beginning-position))
+    (when (search-forward "|" (line-end-position) t)
       (not (bison--in-braced-c-expression? section-start)))))
 
 ;;;; Indentation
@@ -451,7 +450,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
             (funcall reset-pt))))
 
        ((= section bison--bison-decls-section)
-        (let ((opener (bison--at-decl-start?)))
+        (let ((opener (bison--at-decl-start? (line-end-position))))
           (cond
            (opener
             (goto-char opener)
@@ -528,7 +527,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
                            (indent-to-column
                             bison-rule-enumeration-column)))))))
           (funcall reset-pt))
-         ((bison--production-alternative? (line-beginning-position) (line-end-position) section)
+         ((bison--production-alternative? section)
           (back-to-indentation);; should put point on "|"
           (if (not (= (current-column) bison-rule-separator-column))
               (progn
