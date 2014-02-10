@@ -75,7 +75,7 @@ Used for %token, %type, etc."
 
 ;;;; Internal Variables
 
-(defvar bison--declarers
+(defvar bison--declarations
   '("%union" "%token" "%type" "%left" "%right" "%nonassoc")
   "List of commands which can declare a token or state type.")
 
@@ -111,7 +111,7 @@ Used for %token, %type, etc."
 (defvar bison-font-lock-keywords-2
   (append
    (list
-    (cons (eval `(rx bol (group-n 1 (or ,@bison--declarers))))
+    (cons (eval `(rx bol (group-n 1 (or ,@bison--declarations))))
           '(1 font-lock-keyword-face)))
    bison-font-lock-keywords-1)
   "Gaudy highlighting for Bison mode.")
@@ -307,7 +307,7 @@ Examples include %type, %token, %right.
 LIMIT sets an end for the search."
   (save-excursion
     (goto-char (line-beginning-position))
-    (re-search-forward (eval `(rx bol (or ,@bison--declarers)))
+    (re-search-forward (eval `(rx bol (or ,@bison--declarations)))
                        limit t)))
 
 (defun bison--at-production-start? ()
