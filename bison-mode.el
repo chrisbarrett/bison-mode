@@ -76,7 +76,7 @@ Used for %token, %type, etc."
 ;;;; Internal Variables
 
 (defvar bison--declarations
-  '("%union" "%token" "%type" "%left" "%right" "%nonassoc")
+  '("%define" "%union" "%token" "%type" "%left" "%right" "%nonassoc")
   "List of commands which can declare a token or state type.")
 
 (defvar bison--word-constituent-re (rx (or word "_")))
