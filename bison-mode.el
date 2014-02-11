@@ -608,16 +608,17 @@ Otherwise insert a single colon."
   "Insert a pipe character.
 If the pipe was used as a rule separator, align the pipe accordingly."
   (interactive)
-  (if bison-disable-electric-keys?
-      (insert "|")
-
-    (when (and (= bison--grammar-rules-section (bison--section-start))
-               (bison--blank-line?))
-      (beginning-of-line)
-      (delete-horizontal-space)
-      (indent-to-column bison-rule-separator-column)
-      (insert "|")
-      (indent-to-column bison-rule-enumeration-column))))
+  (cond (bison-disable-electric-keys?
+         (insert "|"))
+        ((and (= bison--grammar-rules-section (bison--section-start))
+              (bison--blank-line?))
+         (beginning-of-line)
+         (delete-horizontal-space)
+         (indent-to-column bison-rule-separator-column)
+         (insert "|")
+         (indent-to-column bison-rule-enumeration-column))
+        (t
+         (insert "|"))))
 
 (defun bison-electric-open-brace ()
   "Insert an opening curly brace and apply formatting."
