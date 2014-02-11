@@ -421,7 +421,7 @@ Assumes that we are indenting a new line, i.e. at column 0."
       (indent-to-column (bison--grammar-rule-start-col sec))))))
 
 ;; FIXME: Refactor this terrifying monolith.
-(defun bison-indent-line ()
+(defun bison-indent-for-tab-command ()
   "Indent a line of bison code."
   (interactive)
   (let* ((pos (- (point-max) (point)))
@@ -702,7 +702,6 @@ If it ends a type declaration, indent to `bison-decl-token-column'."
 ;;;###autoload
 (defvar bison-mode-map
   (let ((km (make-sparse-keymap)))
-    (set-keymap-parent km c-mode-map)
     (define-key km (kbd ":") 'bison-electric-colon)
     (define-key km (kbd "|") 'bison-electric-pipe)
     (define-key km (kbd "{") 'bison-electric-open-brace)
@@ -710,7 +709,7 @@ If it ends a type declaration, indent to `bison-decl-token-column'."
     (define-key km (kbd "%") 'bison-electric-percent)
     (define-key km (kbd "<") 'bison-electric-less-than)
     (define-key km (kbd ">") 'bison-electric-greater-than)
-    (define-key km (kbd "TAB") 'bison-indent-line)
+    (define-key km (kbd "TAB") 'bison-indent-for-tab-command)
     km)
   "Keymap for `bison-mode'.")
 
