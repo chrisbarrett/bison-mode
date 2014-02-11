@@ -730,6 +730,7 @@ If it ends a type declaration, indent to `bison-decl-token-column'."
   (setq-local indent-line-function 'bison-indent-new-line)
   (setq-local comment-start "/*")
   (setq-local comment-end "*/")
+  (setq-local c-electric-flag nil)
 
   ;; Configure font-lock.
   (setq-local font-lock-keywords nil)
