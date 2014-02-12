@@ -74,17 +74,11 @@ Used for %token, %type, etc."
   '("%define" "%union" "%token" "%type" "%left" "%right" "%nonassoc")
   "List of commands which can declare a token or state type.")
 
-(defvar bison-font-lock-keywords-1 c-font-lock-keywords
-  "Basic highlighting for Bison mode.")
-
-(defvar bison-font-lock-keywords-2
+(defvar bison-font-lock-keywords
   (let ((kws2 (eval `(rx bol (group-n 1 (or ,@bison--declarations))))))
     (cons (cons kws2 '(1 font-lock-keyword-face))
-          bison-font-lock-keywords-1))
-  "Gaudy highlighting for Bison mode.")
-
-(defvar bison-font-lock-keywords bison-font-lock-keywords-2
-  "Default expressions to highlight in Bison mode.")
+          c-font-lock-keywords))
+  "Keywords to highlight in Bison mode.  This is a superset of C keywords.")
 
 ;;;; Section Parsers
 
