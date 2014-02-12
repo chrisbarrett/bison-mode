@@ -113,8 +113,6 @@ Used for %token, %type, etc."
 
   ;; Disable disruptive C minor modes.
   (c-toggle-auto-hungry-state -1)
-  (c-toggle-auto-newline -1)
-  (c-toggle-hungry-state -1)
 
   ;; Configure indentation and comments.
   (setq-local indent-line-function 'bison-indent-new-line)
