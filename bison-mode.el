@@ -78,11 +78,9 @@ Used for %token, %type, etc."
   "Basic highlighting for Bison mode.")
 
 (defvar bison-font-lock-keywords-2
-  (append
-   (list
-    (cons (eval `(rx bol (group-n 1 (or ,@bison--declarations))))
-          '(1 font-lock-keyword-face)))
-   bison-font-lock-keywords-1)
+  (let ((kws2 (eval `(rx bol (group-n 1 (or ,@bison--declarations))))))
+    (cons (cons kws2 '(1 font-lock-keyword-face))
+          bison-font-lock-keywords-1))
   "Gaudy highlighting for Bison mode.")
 
 (defvar bison-font-lock-keywords bison-font-lock-keywords-2
