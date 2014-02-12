@@ -23,7 +23,7 @@
 ;; Provides a major-mode for bison (.y) files.
 
 ;; A bison file is divided into a number of sections. Many commands in this
-;; package perform a different actions depending on the current section.
+;; package perform different actions depending on the current section.
 
 ;; bison-mode's indentation commands are context-sensitive. If point is in C
 ;; code the mode falls back the normal indentation behaviour for C.
