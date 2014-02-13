@@ -2,7 +2,12 @@
 
 ## Summary
 
-Major mode for editing bison/yacc files
+Major mode for editing [GNU Bison](http://www.gnu.org/software/bison/) files,
+providing syntax highlighting and indentation.
+
+This package is based of bison-mode by
+[Eric Beuscher](beuscher@eecs.tulane.edu). The original version is available
+[here](http://ftp.sunet.se/pub/gnu/emacs-lisp/incoming/bison-mode.el).
 
 ## Installing
 
