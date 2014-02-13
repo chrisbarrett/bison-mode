@@ -216,9 +216,9 @@ This is the final section, after the bison grammar declarations."
     (if (search-backward-regexp (rx bol (* space) (+ word) (* space) ":")
                                 nil t)
         (goto-char (match-end 0))
+      ;; Revert position.
+      (goto-char pt)
       (when (called-interactively-p nil)
-        ;; Revert position.
-        (goto-char pt)
         (message "No more productions")))))
 
 ;;;; Buffer Formatting
