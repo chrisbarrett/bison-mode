@@ -404,8 +404,6 @@ Re-indents the buffer and aligns C code blocks in productions."
 
 ;;;; Mode Definition
 
-(make-variable-buffer-local 'c-offsets-alist)
-
 ;;;###autoload
 (defvar bison-mode-map
   (let ((km (make-sparse-keymap)))
