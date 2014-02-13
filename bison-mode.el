@@ -324,9 +324,13 @@ Return a list of column numbers."
 
 (defun bison--align-c-block-delimiters ()
   "Align the start and end delimiters of C blocks in the current production."
-  (let ((block-open (-max (cons bison-minimum-c-block-column
-                                (bison--c-block-start-cols))))
-        (block-close (-max (bison--c-block-end-cols))))
+  (-when-let* ((block-open
+                (-max (cons bison-minimum-c-block-column
+                            (bison--c-block-start-cols))))
+               (block-close
+                ;; This will error if there are no C blocks.
+                (ignore-errors (-max (bison--c-block-end-cols)))))
+
     (save-excursion
       (while (bison--forward-production-case)
         (-when-let (extents (bison--c-block-extents))
