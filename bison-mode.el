@@ -58,10 +58,15 @@
   :group 'bison-mode
   :type 'integer)
 
-(defcustom bison-minimum-c-block-column 40
+(defcustom bison-minimum-c-block-column 30
   "The minimum column to use when aligning C code blocks in productions."
   :group 'bison-mode
   :type 'integer)
+
+(defcustom bison-apply-inner-pad-to-c-blocks? t
+  "If non-nil, add a space of inner padding to C code blocks in productions."
+  :group 'bison-mode
+  :type 'boolean)
 
 ;;;; Internal Variables
 
@@ -223,7 +228,7 @@ This is the final section, after the bison grammar declarations."
 ;;;; Code block utilities
 
 (defun bison--c-block-start ()
-  "The column of the brace beginning a C block on the current line.
+  "The position of the brace beginning a C block on the current line.
 Nil if not found."
   (save-excursion
     (goto-char (line-beginning-position))
@@ -232,7 +237,7 @@ Nil if not found."
       (1+ (match-beginning 0)))))
 
 (defun bison--c-block-end ()
-  "The column of the brace ending a C block on the current line.
+  "The position of the brace ending a C block on the current line.
 Nil if not found."
   (save-excursion
     (-when-let (open (bison--c-block-start))
@@ -241,7 +246,8 @@ Nil if not found."
       (1- (point)))))
 
 (defun bison--current-c-block-extents ()
-  "Return a cons of start and columns."
+  "Find the extents of the C code block, if any, for the production at point.
+Return a cons of (START . END), which are buffer positions."
   (-when-let* ((start (bison--c-block-start))
                (end (bison--c-block-end)))
     (cons start end)))
@@ -307,9 +313,8 @@ Return a list of column numbers."
     (back-to-indentation)
     (point))))
 
-(defun bison--format-production ()
-  "Format the production at point.
-Assume we are at the start of the production."
+(defun bison--align-c-block-delimiters ()
+  "Align the start and end delimiters of C blocks in the current production."
   (let ((block-open (-max (cons bison-minimum-c-block-column
                                 (bison--c-block-start-cols))))
         (block-close (-max (bison--c-block-end-cols))))
@@ -325,6 +330,29 @@ Assume we are at the start of the production."
             (-when-let (c (bison--c-block-end))
               (goto-char c)
               (indent-to block-close))))))))
+
+(defun bison--pad-c-block-delimiters ()
+  "Apply inner padding to each single-line C block in the current production.
+See `bison-apply-inner-pad-to-c-blocks?'."
+  (save-excursion
+    (while (bison--forward-production-case)
+      (-when-let (extents (bison--current-c-block-extents))
+        (when (bison--single-line-c-block? extents)
+          ;; Pad opening.
+          (cl-destructuring-bind (start . _) extents
+            (goto-char start)
+            (search-forward "{")
+            (just-one-space))
+          ;; Pad closing.
+          (goto-char (bison--c-block-end))
+          (just-one-space))))))
+
+(defun bison--format-production ()
+  "Format the production at point.
+Assume we are at the start of the production."
+  (when bison-apply-inner-pad-to-c-blocks?
+    (bison--pad-c-block-delimiters))
+  (bison--align-c-block-delimiters))
 
 (defun bison-format-buffer ()
   "Format the whole buffer.
