@@ -24,8 +24,8 @@ repository. Follow the guidelines below to make sure everything goes smoothly.
 
 ### Naming
 
-- Use a `bison-mode-` prefix for all public names.
-- Use a `bison-mode--` prefix for all internal names.
+- Use a `bison-` prefix for all public names.
+- Use a `bison--` prefix for all internal names.
 
 ### Docstrings
 
