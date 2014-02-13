@@ -48,7 +48,7 @@
   :group 'languages
   :prefix "bison-")
 
-(defcustom bison-rule-case-column 4
+(defcustom bison-production-case-column 4
   "Column for rule and production separators \"|\" and \";\"."
   :group 'bison-mode
   :type 'integer)
@@ -180,7 +180,7 @@ This is the final section, after the bison grammar declarations."
        ((bison--in-c-block?)
         (goto-char (line-beginning-position))
         (delete-horizontal-space)
-        (indent-to (+ 2 bison-rule-case-column)))
+        (indent-to (+ 2 bison-production-case-column)))
 
        ;; Indent productions.
 
@@ -192,13 +192,13 @@ This is the final section, after the bison grammar declarations."
        ((bison--at-first-production-case?)
         (goto-char (line-beginning-position))
         (delete-horizontal-space)
-        (indent-to (+ 2 bison-rule-case-column)))
+        (indent-to (+ 2 bison-production-case-column)))
 
        ((or (bison--at-production-case?)
             (bison--at-production-terminating-semicolon?))
         (goto-char (line-beginning-position))
         (delete-horizontal-space)
-        (indent-to bison-rule-case-column))))
+        (indent-to bison-production-case-column))))
 
     ;; Clear dirty state if line was not actually modified.
     (set-buffer-modified-p (not (equal s (bison--current-line))))))
