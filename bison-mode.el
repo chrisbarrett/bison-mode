@@ -115,7 +115,7 @@ Used for %token, %type, etc."
 
 (defun bison--current-line ()
   "Return the current line as a string."
-  (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+  (buffer-substring (line-beginning-position) (line-end-position)))
 
 (defun bison--in-c-section? ()
   "Non-nil if point is in the C section of a bison file.
