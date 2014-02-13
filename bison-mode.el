@@ -245,7 +245,7 @@ Nil if not found."
       (forward-sexp)
       (1- (point)))))
 
-(defun bison--current-c-block-extents ()
+(defun bison--c-block-extents ()
   "Find the extents of the C code block, if any, for the production at point.
 Return a cons of (START . END), which are buffer positions."
   (-when-let* ((start (bison--c-block-start))
@@ -269,7 +269,7 @@ Return a list of column numbers."
   (save-excursion
     (let (acc)
       (while (bison--forward-production-case)
-        (-when-let (extents (bison--current-c-block-extents))
+        (-when-let (extents (bison--c-block-extents))
           (cl-destructuring-bind (start . end) extents
             (when (bison--single-line-c-block? extents)
               (setq acc (cons start acc))))))
@@ -282,7 +282,7 @@ Return a list of column numbers."
   (save-excursion
     (let (acc)
       (while (bison--forward-production-case)
-        (-when-let (extents (bison--current-c-block-extents))
+        (-when-let (extents (bison--c-block-extents))
           (cl-destructuring-bind (start . end) extents
             (when (bison--single-line-c-block? extents)
               (setq acc (cons end acc))))))
@@ -320,7 +320,7 @@ Return a list of column numbers."
         (block-close (-max (bison--c-block-end-cols))))
     (save-excursion
       (while (bison--forward-production-case)
-        (-when-let (extents (bison--current-c-block-extents))
+        (-when-let (extents (bison--c-block-extents))
           (when (bison--single-line-c-block? extents)
             (cl-destructuring-bind (start . _end) extents
               ;; Indent the opening brace. Note that this will invalidate the
@@ -336,7 +336,7 @@ Return a list of column numbers."
   "Apply inner padding to the C block in the current production case.
 See `bison-apply-inner-padding-to-c-blocks?'."
   (save-excursion
-    (-when-let (extents (bison--current-c-block-extents))
+    (-when-let (extents (bison--c-block-extents))
       (when (bison--single-line-c-block? extents)
         (cl-destructuring-bind (start . _end) extents
           ;; Pad opening. Note that this will invalidate the end of the block
