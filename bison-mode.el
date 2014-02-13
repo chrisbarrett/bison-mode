@@ -1,4 +1,4 @@
-;;; bison-mode.el --- Major mode for editing bison/yacc files
+;;; bison-mode.el --- Major mode for editing bison files
 
 ;; Copyright (C) 2014 Chris Barrett
 
