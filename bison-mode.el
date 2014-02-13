@@ -180,6 +180,31 @@ This is the final section, after the bison grammar declarations."
       (delete-horizontal-space)
       (indent-to bison-rule-case-column)))))
 
+;;;; Motion Commands
+
+(defun bison-forward-production ()
+  "Move forward to the start of the next production."
+  (interactive)
+  (if (search-forward-regexp (rx bol (* space) (+ word) (* space) ":")
+                             nil t)
+      (goto-char (match-end 0))
+    (when (called-interactively-p nil)
+      (message "No more productions"))))
+
+(defun bison-previous-production ()
+  "Move forward to the start of the next production."
+  (interactive)
+  (let ((pt (point)))
+    (goto-char (line-beginning-position))
+    (if (search-backward-regexp (rx bol (* space) (+ word) (* space) ":")
+                                nil t)
+        (goto-char (match-end 0))
+      (when (called-interactively-p nil)
+        ;; Revert position.
+        (goto-char pt)
+        (message "No more productions")))))
+
+;;;; Buffer Formatting
 ;;;; Mode Definition
 
 (make-variable-buffer-local 'c-offsets-alist)
@@ -187,7 +212,10 @@ This is the final section, after the bison grammar declarations."
 ;;;###autoload
 (defvar bison-mode-map
   (let ((km (make-sparse-keymap)))
+    (define-key km (kbd "M-N") 'bison-forward-production)
+    (define-key km (kbd "M-P") 'bison-previous-production)
     (define-key km (kbd "TAB") 'bison-indent-line)
+    (define-key km (kbd "M-q") 'bison-format-buffer)
     km)
   "Keymap for `bison-mode'.")
 
