@@ -196,16 +196,11 @@ This is the final section, after the bison grammar declarations."
   "Major mode for editing bison/yacc files.
 
 \\{bison-mode-map}"
-  (setq-local c-basic-offset 4)
-  (c-set-offset 'knr-argdecl-intro 0)
-
   ;; Disable disruptive C minor modes.
   (c-toggle-auto-hungry-state -1)
 
   ;; Configure indentation and comments.
   (setq-local indent-line-function 'bison-indent-line)
-  (setq-local comment-start "/*")
-  (setq-local comment-end "*/")
   (setq-local c-electric-flag nil)
 
   ;; Configure font-lock.
