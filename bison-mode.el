@@ -41,18 +41,20 @@
 (require 'dash)
 (require 's)
 
+(autoload 'thing-at-point-looking-at "thingatpt")
+
 (defgroup bison-mode nil
   "Major mode for editing bison and yacc files"
   :group 'languages
   :prefix "bison-")
 
-(defcustom bison-rule-separator-column 8
+(defcustom bison-rule-case-column 4
   "Column for rule and production separators \"|\" and \";\"."
   :group 'bison-mode
   :type 'integer)
 
-(defcustom bison-rule-enumeration-column 16
-  "Column for beginning enumeration of a production's rules."
+(defcustom bison-decl-c-column 8
+  "Column at which lines in the C declarations block should be indented."
   :group 'bison-mode
   :type 'integer)
 
@@ -80,9 +82,98 @@ Used for %token, %type, etc."
           c-font-lock-keywords))
   "Keywords to highlight in Bison mode.  This is a superset of C keywords.")
 
-;;;; Section Parsers
+;;;; Indentation
 
-;;;; Syntax Parsers
+(defun bison--in-string? ()
+  "Non-nil if point is inside a string according to font locking."
+  (equal 'font-lock-string-face (get-char-property (1- (point)) 'face)))
+
+(defun bison--in-comment? ()
+  "Non-nil if point is inside a comment according to font locking."
+  (equal 'font-lock-comment-face (get-char-property (1- (point)) 'face)))
+
+(defun bison--backwards-up-to-top-curly-braces ()
+
+  "Move to the top curly brace containing point."
+  (let (pos)
+    (while (ignore-errors (goto-char (c-up-list-backward)) t)
+      (when (thing-at-point-looking-at "{")
+        (setq pos (point))))
+    pos))
+
+(defun bison--in-c-block? ()
+  "Non-nil if point is inside a c block in a production."
+  (save-excursion (bison--backwards-up-to-top-curly-braces)))
+
+(defun bison--in-c-declarations-section? ()
+  "Non-nil if point is inside the C declarations section of a bison file."
+  (save-excursion
+    (cl-loop while (ignore-errors (goto-char (c-up-list-backward)) t)
+             do (when (thing-at-point-looking-at "%{") (cl-return t)))))
+
+(defun bison--current-line ()
+  "Return the current line as a string."
+  (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
+
+(defun bison--in-c-section? ()
+  "Non-nil if point is in the C section of a bison file.
+This is the final section, after the bison grammar declarations."
+  (save-excursion (search-backward "%%" nil t 2)))
+
+(defun bison--at-production-header? ()
+  (s-matches? (rx bol (* space) (* word) (* space) ":")
+              (bison--current-line)))
+
+(defun bison--at-first-production-case? ()
+  (save-excursion
+    (unless (bison--at-production-case?)
+      (forward-line -1)
+      (bison--at-production-header?))))
+
+(defun bison--at-production-case? ()
+  (s-matches? (rx bol (* space) "|") (bison--current-line)))
+
+(defun bison--at-production-terminating-semicolon? ()
+  (s-matches? (rx bol (* space) ";") (bison--current-line)))
+
+(defun bison-indent-line ()
+  "Indent the current line, using C or bison formatting styles as appropriate."
+  (interactive)
+  (save-excursion
+    (cond
+     ((or (bison--in-comment?) (bison--in-string?))
+      'noindent)
+
+     ((s-matches? (rx bol (* space) (or "%{" "%}")) (bison--current-line))
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space))
+
+     ((bison--in-c-declarations-section?)
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space)
+      (indent-to bison-decl-c-column))
+
+     ((bison--in-c-section?)
+      (c-indent-line nil t))
+
+     ((bison--in-c-block?)
+      (c-indent-line nil t))
+
+     ((bison--at-production-header?)
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space)
+      (indent-to 0))
+
+     ((bison--at-first-production-case?)
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space)
+      (indent-to (+ 2 bison-rule-case-column)))
+
+     ((or (bison--at-production-case?)
+          (bison--at-production-terminating-semicolon?))
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space)
+      (indent-to bison-rule-case-column)))))
 
 ;;;; Mode Definition
 
@@ -107,7 +198,7 @@ Used for %token, %type, etc."
   (c-toggle-auto-hungry-state -1)
 
   ;; Configure indentation and comments.
-  (setq-local indent-line-function 'bison-indent-new-line)
+  (setq-local indent-line-function 'bison-indent-line)
   (setq-local comment-start "/*")
   (setq-local comment-end "*/")
   (setq-local c-electric-flag nil)
