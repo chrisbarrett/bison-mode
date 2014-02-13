@@ -63,7 +63,7 @@
   :group 'bison-mode
   :type 'integer)
 
-(defcustom bison-apply-inner-pad-to-c-blocks? t
+(defcustom bison-apply-inner-padding-to-c-blocks? t
   "If non-nil, add a space of inner padding to C code blocks in productions."
   :group 'bison-mode
   :type 'boolean)
@@ -113,7 +113,7 @@
 
 (defun bison--current-line ()
   "Return the current line as a string."
-  (buffer-substring (line-beginning-position) (line-end-position)))
+  (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
 (defun bison--in-c-section? ()
   "Non-nil if point is in the C section of a bison file.
@@ -322,37 +322,55 @@ Return a list of column numbers."
       (while (bison--forward-production-case)
         (-when-let (extents (bison--current-c-block-extents))
           (when (bison--single-line-c-block? extents)
-            ;; Align C block open brace.
-            (-when-let (c (bison--c-block-start))
-              (goto-char c)
+            (cl-destructuring-bind (start . _end) extents
+              ;; Indent the opening brace. Note that this will invalidate the
+              ;; end of the block in the `extents' var.
+              (goto-char start)
               (indent-to block-open))
-            ;; Align C block close brace.
-            (-when-let (c (bison--c-block-end))
-              (goto-char c)
-              (indent-to block-close))))))))
+            ;; Indent the closing brace. The end delimiter pos needs to be
+            ;; recalculated as noted above.
+            (goto-char (bison--c-block-end))
+            (indent-to block-close)))))))
 
 (defun bison--pad-c-block-delimiters ()
-  "Apply inner padding to each single-line C block in the current production.
-See `bison-apply-inner-pad-to-c-blocks?'."
+  "Apply inner padding to the C block in the current production case.
+See `bison-apply-inner-padding-to-c-blocks?'."
   (save-excursion
-    (while (bison--forward-production-case)
-      (-when-let (extents (bison--current-c-block-extents))
-        (when (bison--single-line-c-block? extents)
-          ;; Pad opening.
-          (cl-destructuring-bind (start . _) extents
-            (goto-char start)
-            (search-forward "{")
-            (just-one-space))
-          ;; Pad closing.
-          (goto-char (bison--c-block-end))
-          (just-one-space))))))
+    (-when-let (extents (bison--current-c-block-extents))
+      (when (bison--single-line-c-block? extents)
+        (cl-destructuring-bind (start . _end) extents
+          ;; Pad opening. Note that this will invalidate the end of the block
+          ;; in the `extents' var.
+          (goto-char start)
+          (search-forward "{")
+          (just-one-space))
+        ;; Pad closing. The end delimiter pos needs to be recalculated as noted
+        ;; above.
+        (goto-char (bison--c-block-end))
+        (just-one-space)))))
+
+(defun bison--reindent-c-block ()
+  "Reindent the C block, if any, for the current production case.
+Doing so forces the C block minimum column to be used in later
+formatting steps."
+  (save-excursion
+    (-when-let (start (bison--c-block-start))
+      (goto-char start)
+      (delete-horizontal-space)
+      (indent-to bison-minimum-c-block-column))))
 
 (defun bison--format-production ()
   "Format the production at point.
 Assume we are at the start of the production."
-  (when bison-apply-inner-pad-to-c-blocks?
-    (bison--pad-c-block-delimiters))
-  (bison--align-c-block-delimiters))
+  (save-excursion
+    ;; Apply pre-formatting to each production case.
+    (save-excursion
+      (while (bison--forward-production-case)
+        (bison--reindent-c-block)
+        (when bison-apply-inner-padding-to-c-blocks?
+          (bison--pad-c-block-delimiters))))
+
+    (bison--align-c-block-delimiters)))
 
 (defun bison-format-buffer ()
   "Format the whole buffer.
