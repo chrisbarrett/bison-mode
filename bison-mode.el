@@ -86,11 +86,13 @@ Used for %token, %type, etc."
 
 (defun bison--in-string? ()
   "Non-nil if point is inside a string according to font locking."
-  (equal 'font-lock-string-face (get-char-property (1- (point)) 'face)))
+  (ignore-errors
+    (equal 'font-lock-string-face (get-char-property (1- (point)) 'face))))
 
 (defun bison--in-comment? ()
   "Non-nil if point is inside a comment according to font locking."
-  (equal 'font-lock-comment-face (get-char-property (1- (point)) 'face)))
+  (ignore-errors
+    (equal 'font-lock-comment-face (get-char-property (1- (point)) 'face))))
 
 (defun bison--backwards-up-to-top-curly-braces ()
 
