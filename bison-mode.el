@@ -144,8 +144,9 @@ This is the final section, after the bison grammar declarations."
 (defun bison--at-production-case? ()
   (s-matches? (rx bol (* space) "|") (bison--current-line)))
 
-(defun bison--at-production-terminating-semicolon? ()
-  (s-matches? (rx bol (* space) ";") (bison--current-line)))
+(defun bison--at-end-of-production? ()
+  "Non-nil if point is at the end of the production."
+  (s-matches? (rx ";" (* space) eol) (bison--current-line)))
 
 (defun bison--at-c-declarations-braces? ()
   (s-matches? (rx bol (* space) (or "%{" "%}")) (bison--current-line)))
@@ -204,7 +205,7 @@ This is the final section, after the bison grammar declarations."
         (indent-to (+ 2 bison-production-case-column)))
 
        ((or (bison--at-production-case?)
-            (bison--at-production-terminating-semicolon?))
+            (bison--at-end-of-production?))
         (goto-char (line-beginning-position))
         (delete-horizontal-space)
         (indent-to bison-production-case-column))))
@@ -299,10 +300,6 @@ Return a list of column numbers."
       (-map 'bison--point-to-column (nreverse acc)))))
 
 ;;;; Buffer Formatting
-
-(defun bison--at-end-of-production? ()
-  "Non-nil if point is at the end of the production."
-  (s-matches? (rx ";" (* space) eol) (bison--current-line)))
 
 (defun bison--forward-production-case ()
   "Move forward to the next case in the production at point."
