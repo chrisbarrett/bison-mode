@@ -141,6 +141,14 @@ This is the final section, after the bison grammar declarations."
 (defun bison--at-c-declarations-braces? ()
   (s-matches? (rx bol (* space) (or "%{" "%}")) (bison--current-line)))
 
+(defun bison--in-multiline-c-block? ()
+  "Non-nil if point is in a multi-line C block in a production."
+  (when (bison--in-c-block?)
+    (save-excursion
+      (goto-char (line-beginning-position))
+      ;; Presume point is still in the same C block.
+      (bison--in-c-block?))))
+
 (defun bison-indent-line ()
   "Indent the current line, using C or bison formatting styles as appropriate."
   (interactive)
@@ -158,11 +166,20 @@ This is the final section, after the bison grammar declarations."
       (delete-horizontal-space)
       (indent-to bison-decl-c-column))
 
+     ;; Indent C code blocks using C indentation.
+
      ((bison--in-c-section?)
       (c-indent-line nil t))
 
-     ((bison--in-c-block?)
+     ;; If multi-line, do c indent, otherwise indent as production.
+     ((bison--in-multiline-c-block?)
       (c-indent-line nil t))
+     ((bison--in-c-block?)
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space)
+      (indent-to (+ 2 bison-rule-case-column)))
+
+     ;; Indent productions.
 
      ((bison--at-production-header?)
       (goto-char (line-beginning-position))
