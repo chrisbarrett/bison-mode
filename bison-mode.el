@@ -6,7 +6,7 @@
 ;; Created:  2 Feb 1998
 ;; Version:  0.2
 ;; Package-Requires: ((cl-lib "0.2") (dash "2.5.0") (s "1.7.0"))
-;; Keywords: bison-mode, yacc-mode
+;; Keywords: bison-mode
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -93,7 +93,6 @@
     (equal 'font-lock-comment-face (get-char-property (1- (point)) 'face))))
 
 (defun bison--backwards-up-to-top-curly-braces ()
-
   "Move to the top curly brace containing point."
   (let (pos)
     (while (ignore-errors (goto-char (c-up-list-backward)) t)
@@ -273,8 +272,7 @@ Return a list of column numbers."
           (cl-destructuring-bind (start . end) extents
             (when (bison--single-line-c-block? extents)
               (setq acc (cons start acc))))))
-      (-map 'bison--point-to-column
-            (nreverse acc)))))
+      (-map 'bison--point-to-column (nreverse acc)))))
 
 (defun bison--c-block-end-cols ()
   "Find the ending column C for blocks in each case for this production.
@@ -286,8 +284,7 @@ Return a list of column numbers."
           (cl-destructuring-bind (start . end) extents
             (when (bison--single-line-c-block? extents)
               (setq acc (cons end acc))))))
-      (-map 'bison--point-to-column
-            (nreverse acc)))))
+      (-map 'bison--point-to-column (nreverse acc)))))
 
 ;;;; Buffer Formatting
 
