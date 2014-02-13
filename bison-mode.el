@@ -138,6 +138,9 @@ This is the final section, after the bison grammar declarations."
 (defun bison--at-production-terminating-semicolon? ()
   (s-matches? (rx bol (* space) ";") (bison--current-line)))
 
+(defun bison--at-c-declarations-braces? ()
+  (s-matches? (rx bol (* space) (or "%{" "%}")) (bison--current-line)))
+
 (defun bison-indent-line ()
   "Indent the current line, using C or bison formatting styles as appropriate."
   (interactive)
@@ -146,7 +149,7 @@ This is the final section, after the bison grammar declarations."
      ((or (bison--in-comment?) (bison--in-string?))
       'noindent)
 
-     ((s-matches? (rx bol (* space) (or "%{" "%}")) (bison--current-line))
+     ((bison--at-c-declarations-braces?)
       (goto-char (line-beginning-position))
       (delete-horizontal-space))
 
