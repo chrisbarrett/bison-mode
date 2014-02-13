@@ -58,15 +58,8 @@
   :group 'bison-mode
   :type 'integer)
 
-(defcustom bison-decl-type-column 8
-  "Column at which token and state types should be declared."
-  :group 'bison-mode
-  :type 'integer)
-
-(defcustom bison-decl-token-column 24
-  "Column at which tokens and states are listed when declared.
-
-Used for %token, %type, etc."
+(defcustom bison-minimum-c-block-column 40
+  "The minimum column to use when aligning C code blocks in productions."
   :group 'bison-mode
   :type 'integer)
 
@@ -227,7 +220,136 @@ This is the final section, after the bison grammar declarations."
       (when (called-interactively-p nil)
         (message "No more productions")))))
 
+;;;; Code block utilities
+
+(defun bison--c-block-start ()
+  "The column of the brace beginning a C block on the current line.
+Nil if not found."
+  (save-excursion
+    (goto-char (line-beginning-position))
+    (when (search-forward-regexp (rx (not (any "'")) "{")
+                                 (line-end-position) t)
+      (1+ (match-beginning 0)))))
+
+(defun bison--c-block-end ()
+  "The column of the brace ending a C block on the current line.
+Nil if not found."
+  (save-excursion
+    (-when-let (open (bison--c-block-start))
+      (goto-char open)
+      (forward-sexp)
+      (1- (point)))))
+
+(defun bison--current-c-block-extents ()
+  "Return a cons of start and columns."
+  (-when-let* ((start (bison--c-block-start))
+               (end (bison--c-block-end)))
+    (cons start end)))
+
+(cl-defun bison--single-line-c-block? ((start . end))
+  "Non-nil if the given extents are on the same line.
+START and END are buffer positions."
+  (equal (line-number-at-pos start) (line-number-at-pos end)))
+
+(defun bison--point-to-column (pos)
+  "Convert buffer position POS to a column number."
+  (save-excursion
+    (goto-char pos)
+    (current-column)))
+
+(defun bison--c-block-start-cols ()
+  "Find the starting column for C blocks in each case for this production.
+Return a list of column numbers."
+  (save-excursion
+    (let (acc)
+      (while (bison--forward-production-case)
+        (-when-let (extents (bison--current-c-block-extents))
+          (cl-destructuring-bind (start . end) extents
+            (when (bison--single-line-c-block? extents)
+              (setq acc (cons start acc))))))
+      (-map 'bison--point-to-column
+            (nreverse acc)))))
+
+(defun bison--c-block-end-cols ()
+  "Find the ending column C for blocks in each case for this production.
+Return a list of column numbers."
+  (save-excursion
+    (let (acc)
+      (while (bison--forward-production-case)
+        (-when-let (extents (bison--current-c-block-extents))
+          (cl-destructuring-bind (start . end) extents
+            (when (bison--single-line-c-block? extents)
+              (setq acc (cons end acc))))))
+      (-map 'bison--point-to-column
+            (nreverse acc)))))
+
 ;;;; Buffer Formatting
+
+(defun bison--at-end-of-production? ()
+  "Non-nil if point is at the end of the production."
+  (s-matches? (rx ";" (* space) eol) (bison--current-line)))
+
+(defun bison--forward-production-case ()
+  "Move forward to the next case in the production at point."
+  (cond
+   ((bison--at-end-of-production?) nil)
+
+   ((or (bison--at-production-header?)
+        (bison--at-first-production-case?))
+    (forward-line)
+    (back-to-indentation)
+    (point))
+
+   (t
+    (forward-line)
+    ;; Skip past C blocks.
+    (search-forward-regexp (rx bol (* space) "|") nil t)
+    (back-to-indentation)
+    (point))))
+
+(defun bison--format-production ()
+  "Format the production at point.
+Assume we are at the start of the production."
+  (let ((block-open (-max (cons bison-minimum-c-block-column
+                                (bison--c-block-start-cols))))
+        (block-close (-max (bison--c-block-end-cols))))
+    (save-excursion
+      (while (bison--forward-production-case)
+        (-when-let (extents (bison--current-c-block-extents))
+          (when (bison--single-line-c-block? extents)
+            ;; Align C block open brace.
+            (-when-let (c (bison--c-block-start))
+              (goto-char c)
+              (indent-to block-open))
+            ;; Align C block close brace.
+            (-when-let (c (bison--c-block-end))
+              (goto-char c)
+              (indent-to block-close))))))))
+
+(defun bison-format-buffer ()
+  "Format the whole buffer.
+Re-indents the buffer and aligns C code blocks in productions."
+  (interactive)
+  (let ((s (buffer-string)))
+    (save-excursion
+      ;; Indent buffer.
+      (goto-char (point-min))
+      (while (not (eobp))
+        (bison-indent-line)
+        (forward-line))
+      ;; Format productions.
+      (goto-char (point-min))
+      (while (bison-forward-production)
+        (bison--format-production)))
+    ;; Clear dirty state if buffer was not actually modified.
+    (let ((modified? (not (equal s (bison--current-line)))))
+      (set-buffer-modified-p modified?)
+      ;; Tell user whether buffer was modified.
+      (when (called-interactively-p nil)
+        (if modified?
+            (message "Buffer formatted")
+          (message "No changes"))))))
+
 ;;;; Mode Definition
 
 (make-variable-buffer-local 'c-offsets-alist)
