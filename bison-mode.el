@@ -210,9 +210,7 @@ This is the final section, after the bison grammar declarations."
 
   ;; Configure font-lock.
   (setq-local font-lock-keywords nil)
-  (setq-local font-lock-defaults '((bison-font-lock-keywords
-                                    bison-font-lock-keywords-1
-                                    bison-font-lock-keywords-2)
+  (setq-local font-lock-defaults '((bison-font-lock-keywords)
                                    nil nil nil)))
 
 ;;;###autoload
