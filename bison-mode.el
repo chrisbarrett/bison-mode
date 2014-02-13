@@ -1,9 +1,8 @@
 ;;; bison-mode.el --- Major mode for editing bison/yacc files
 
-;; Copyright (C) 1998 Eric Beuscher
+;; Copyright (C) 2014 Chris Barrett
 
-;; Author:   Eric Beuscher <beuscher@eecs.tulane.edu>
-;; Created:  2 Feb 1998
+;; Author:   Chris Barrett
 ;; Version:  0.2
 ;; Package-Requires: ((cl-lib "0.2") (dash "2.5.0") (s "1.7.0"))
 ;; Keywords: bison-mode
@@ -21,12 +20,25 @@
 ;;; Commentary:
 ;;
 ;; Provides a major-mode for bison (.y) files.
-
+;;
 ;; A bison file is divided into a number of sections. Many commands in this
 ;; package perform different actions depending on the current section.
-
+;;
 ;; bison-mode's indentation commands are context-sensitive. If point is in C
 ;; code the mode falls back the normal indentation behaviour for C.
+;;
+;; bison-mode also has a command, `bison-format-buffer', which will reindent the
+;; entire buffer and line up C blocks in an attractive way.
+;;
+;;; File History:
+;;
+;; This mode is based of bison-mode by Eric Beuscher <beuscher@eecs.tulane.edu>.
+;; The original version is available here:
+;;
+;;   http://ftp.sunet.se/pub/gnu/emacs-lisp/incoming/bison-mode.el
+;;
+;; It has since been entirely rewritten by Chris Barrett
+;; <chris.d.barrett@me.com>.
 
 ;;; Code:
 
