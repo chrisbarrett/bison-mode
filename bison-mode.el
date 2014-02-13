@@ -362,7 +362,7 @@ formatting steps."
   (save-excursion
     (-when-let (start (bison--c-block-start))
       (goto-char start)
-      (delete-horizontal-space)
+      (just-one-space)
       (indent-to bison-minimum-c-block-column))))
 
 (defun bison--format-production ()
