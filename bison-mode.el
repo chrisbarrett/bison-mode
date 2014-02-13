@@ -53,7 +53,7 @@
   :group 'bison-mode
   :type 'integer)
 
-(defcustom bison-decl-c-column 8
+(defcustom bison-decl-c-column 4
   "Column at which lines in the C declarations block should be indented."
   :group 'bison-mode
   :type 'integer)
