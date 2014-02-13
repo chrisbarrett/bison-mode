@@ -152,50 +152,56 @@ This is the final section, after the bison grammar declarations."
 (defun bison-indent-line ()
   "Indent the current line, using C or bison formatting styles as appropriate."
   (interactive)
-  (save-excursion
-    (cond
-     ((or (bison--in-comment?) (bison--in-string?))
-      'noindent)
+  (let ((s (bison--current-line)))
 
-     ((bison--at-c-declarations-braces?)
-      (goto-char (line-beginning-position))
-      (delete-horizontal-space))
+    ;; Perform indentation.
+    (save-excursion
+      (cond
+       ((or (bison--in-comment?) (bison--in-string?))
+        'noindent)
 
-     ((bison--in-c-declarations-section?)
-      (goto-char (line-beginning-position))
-      (delete-horizontal-space)
-      (indent-to bison-decl-c-column))
+       ((bison--at-c-declarations-braces?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space))
 
-     ;; Indent C code blocks using C indentation.
+       ((bison--in-c-declarations-section?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to bison-decl-c-column))
 
-     ((bison--in-c-section?)
-      (c-indent-line nil t))
+       ;; Indent C code blocks using C indentation.
 
-     ;; If multi-line, do c indent, otherwise indent as production.
-     ((bison--in-multiline-c-block?)
-      (c-indent-line nil t))
-     ((bison--in-c-block?)
-      (goto-char (line-beginning-position))
-      (delete-horizontal-space)
-      (indent-to (+ 2 bison-rule-case-column)))
+       ((bison--in-c-section?)
+        (c-indent-line nil t))
 
-     ;; Indent productions.
+       ;; If multi-line, do c indent, otherwise indent as production.
+       ((bison--in-multiline-c-block?)
+        (c-indent-line nil t))
+       ((bison--in-c-block?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to (+ 2 bison-rule-case-column)))
 
-     ((bison--at-production-header?)
-      (goto-char (line-beginning-position))
-      (delete-horizontal-space)
-      (indent-to 0))
+       ;; Indent productions.
 
-     ((bison--at-first-production-case?)
-      (goto-char (line-beginning-position))
-      (delete-horizontal-space)
-      (indent-to (+ 2 bison-rule-case-column)))
+       ((bison--at-production-header?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to 0))
 
-     ((or (bison--at-production-case?)
-          (bison--at-production-terminating-semicolon?))
-      (goto-char (line-beginning-position))
-      (delete-horizontal-space)
-      (indent-to bison-rule-case-column)))))
+       ((bison--at-first-production-case?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to (+ 2 bison-rule-case-column)))
+
+       ((or (bison--at-production-case?)
+            (bison--at-production-terminating-semicolon?))
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to bison-rule-case-column))))
+
+    ;; Clear dirty state if line was not actually modified.
+    (set-buffer-modified-p (not (equal s (bison--current-line))))))
 
 ;;;; Motion Commands
 
