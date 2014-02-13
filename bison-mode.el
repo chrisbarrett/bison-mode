@@ -313,9 +313,12 @@ Return a list of column numbers."
     (point))
 
    (t
-    (forward-line)
     ;; Skip past C blocks.
-    (search-forward-regexp (rx bol (* space) "|") nil t)
+    (-when-let (extents (bison--c-block-extents))
+      (cl-destructuring-bind (_start . end) extents
+        (goto-char end)))
+
+    (forward-line)
     (back-to-indentation)
     (point))))
 
