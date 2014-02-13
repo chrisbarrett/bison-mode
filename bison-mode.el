@@ -187,7 +187,7 @@ This is the final section, after the bison grammar declarations."
 ;;;###autoload
 (defvar bison-mode-map
   (let ((km (make-sparse-keymap)))
-    (define-key km (kbd "TAB") 'bison-indent-for-tab-command)
+    (define-key km (kbd "TAB") 'bison-indent-line)
     km)
   "Keymap for `bison-mode'.")
 
