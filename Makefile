@@ -57,6 +57,9 @@ install : dist
 uninstall :
 	rm -rf $(USER_ELPA_D)/bison-mode-*
 
+.PHONY: reinstall
+reinstall : clean uninstall install
+
 # Restore to pristine state.
 .PHONY: clean-all
 clean-all : clean clean-pkgdir
