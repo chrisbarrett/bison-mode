@@ -179,7 +179,12 @@ This is the final section, after the bison grammar declarations."
         (delete-horizontal-space)
         (indent-to bison-decl-c-column))
 
-       ;; Indent C code blocks using C indentation.
+       ;; Indent C code blocks using C indentation. As an exception, lines
+       ;; beginning with a comment are not re-indented.
+
+       ((and (bison--in-c-section?)
+             (s-matches? (rx bol "/*") (bison--current-line)) )
+        'noindent)
 
        ((bison--in-c-section?)
         (c-indent-line nil t))
