@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Chris Barrett
 
 ;; Author:   Chris Barrett
-;; Version:  0.2
+;; Version:  0.3
 ;; Package-Requires: ((cl-lib "0.2") (dash "2.5.0") (s "1.7.0"))
 ;; Keywords: bison-mode
 
