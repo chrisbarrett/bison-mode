@@ -191,67 +191,61 @@ Specifically test whether this is a hanging brace on a new line, e.g.:
   (save-restriction
     (widen)
     (let ((s (bison--current-line)))
-      (save-excursion
-        (cond
-         ((or (bison--in-comment?) (bison--in-string?))
-          'noindent)
+      (cond
+       ((or (bison--in-comment?) (bison--in-string?))
+        'noindent)
 
-         ((bison--at-c-declarations-braces?)
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space))
+       ((bison--at-c-declarations-braces?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space))
 
-         ((bison--in-c-declarations-section?)
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (indent-to bison-decl-c-column))
+       ((bison--in-c-declarations-section?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to bison-decl-c-column))
 
-         ;; Indent C code blocks using C indentation. As an exception, lines
-         ;; beginning with a comment are not re-indented.
+       ;; Indent C code blocks using C indentation. As an exception, lines
+       ;; beginning with a comment are not re-indented.
 
-         ((and (bison--in-c-section?)
-               (s-matches? (rx bol "/*") (bison--current-line)) )
-          'noindent)
+       ((and (bison--in-c-section?)
+             (s-matches? (rx bol "/*") (bison--current-line)) )
+        'noindent)
 
-         ((bison--in-c-section?)
-          (c-indent-line nil t))
+       ((bison--in-c-section?)
+        (c-indent-line nil t))
 
-         ;; If multi-line, do C indent, otherwise indent as production.
+       ;; If multi-line, do C indent, otherwise indent as production.
 
-         ((bison--at-hanging-open-brace-for-c-block?)
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (indent-to (+ 2 bison-production-case-column)))
+       ((bison--at-hanging-open-brace-for-c-block?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to (+ 2 bison-production-case-column)))
 
-         ((bison--at-close-brace-for-multiline-c-block?)
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (indent-to (+ 2 bison-production-case-column)))
+       ((bison--at-close-brace-for-multiline-c-block?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to (+ 2 bison-production-case-column)))
 
-         ((bison--in-multiline-c-block?)
-          (c-indent-line nil t))
+       ((bison--in-c-block?)
+        (c-indent-line nil t))
 
-         ((bison--in-c-block?)
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (indent-to (+ 2 bison-production-case-column)))
+       ;; Indent productions.
 
-         ;; Indent productions.
+       ((bison--at-production-header?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to 0))
 
-         ((bison--at-production-header?)
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (indent-to 0))
+       ((bison--at-first-production-case?)
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to (+ 2 bison-production-case-column)))
 
-         ((bison--at-first-production-case?)
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (indent-to (+ 2 bison-production-case-column)))
-
-         ((or (bison--at-production-case?)
-              (bison--at-end-of-production?))
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (indent-to bison-production-case-column))))
+       ((or (bison--at-production-case?)
+            (bison--at-end-of-production?))
+        (goto-char (line-beginning-position))
+        (delete-horizontal-space)
+        (indent-to bison-production-case-column)))
 
       ;; Clear dirty state if line was not actually modified.
       (set-buffer-modified-p (not (equal s (bison--current-line)))))))
