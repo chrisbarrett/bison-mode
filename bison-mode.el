@@ -159,6 +159,32 @@ This is the final section, after the bison grammar declarations."
       ;; Presume point is still in the same C block.
       (bison--in-c-block?))))
 
+(defun bison--at-hanging-open-brace-for-c-block? ()
+  "Non-nil if point is on a line starting a C block in a production.
+Specifically test whether this is a hanging brace on a new line, e.g.:
+
+    | rule
+      { /*point*/
+      }"
+  (and (s-matches? (rx bol (* space) "{") (bison--current-line))
+       (save-excursion
+         (forward-line -1)
+         (bison--at-production-case?))))
+
+(defun bison--at-close-brace-for-multiline-c-block? ()
+  "Non-nil if point is on the closing brace for a multi-line C block."
+  (and (s-matches? (rx bol (* space) "}") (bison--current-line))
+       ;; If this line is not the end of the production, check the next to see
+       ;; if the production continues.
+       (save-excursion
+         (goto-char (line-beginning-position))
+         (when (bison--in-multiline-c-block?)
+           (or (bison--at-end-of-production?)
+               (save-excursion
+                 (forward-line 1)
+                 (or (bison--at-production-case?)
+                     (bison--at-end-of-production?))))))))
+
 (defun bison-indent-line ()
   "Indent the current line, using C or bison formatting styles as appropriate."
   (interactive)
@@ -189,9 +215,21 @@ This is the final section, after the bison grammar declarations."
          ((bison--in-c-section?)
           (c-indent-line nil t))
 
-         ;; If multi-line, do c indent, otherwise indent as production.
+         ;; If multi-line, do C indent, otherwise indent as production.
+
+         ((bison--at-hanging-open-brace-for-c-block?)
+          (goto-char (line-beginning-position))
+          (delete-horizontal-space)
+          (indent-to (+ 2 bison-production-case-column)))
+
+         ((bison--at-close-brace-for-multiline-c-block?)
+          (goto-char (line-beginning-position))
+          (delete-horizontal-space)
+          (indent-to (+ 2 bison-production-case-column)))
+
          ((bison--in-multiline-c-block?)
           (c-indent-line nil t))
+
          ((bison--in-c-block?)
           (goto-char (line-beginning-position))
           (delete-horizontal-space)
@@ -375,9 +413,10 @@ Doing so forces the C block minimum column to be used in later
 formatting steps."
   (save-excursion
     (-when-let (start (bison--c-block-start))
-      (goto-char start)
-      (just-one-space)
-      (indent-to bison-minimum-c-block-column))))
+      (unless (bison--at-hanging-open-brace-for-c-block?)
+        (goto-char start)
+        (just-one-space)
+        (indent-to bison-minimum-c-block-column)))))
 
 (defun bison--format-production ()
   "Format the production at point.
